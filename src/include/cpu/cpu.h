@@ -2,6 +2,7 @@
 #define CPU_H_
 
 #include "../common.h"
+#include "../mmu/mmu.h"
 #include <string>
 
 #define RAM_SIZE                    2 * KiB
@@ -72,9 +73,9 @@ protected:
     CPURegisters regs;
     CPUFlags flags;
 private:
-    uint8_t RAM[RAM_SIZE];
     static Opcode opcodeList[256];
     Instruction instr;
+    MMU *pMMU;
 
     /* Load/Store Opcodes */
     void LDA();
@@ -187,7 +188,6 @@ private:
     virtual uint8_t ReadByte(uint16_t);
     virtual uint16_t ReadWord(uint16_t);
     virtual void WriteByte(uint16_t, uint8_t);
-    virtual void WriteWord(uint16_t, uint16_t);
 
     /* stacks push/pop */
     void PushByte(uint8_t);
@@ -195,11 +195,14 @@ private:
     uint8_t PopByte();
     uint16_t PopWord();
 public:
+    void WriteRAM(uint16_t, uint8_t);
+    uint8_t ReadRAM(uint16_t);
     int Step();
+    void Init(MMU *);
+
     /* constructor/destructor */
     CPU();
     ~CPU();
 };
-
 
 #endif

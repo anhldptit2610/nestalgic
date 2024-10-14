@@ -43,7 +43,6 @@ private:
     uint8_t ReadByte(uint16_t addr) override;
     uint16_t ReadWord(uint16_t addr) override;
     void WriteByte(uint16_t addr, uint8_t val) override;
-    void WriteWord(uint16_t addr, uint16_t val) override;
 public:
     ETestResult RunTest();
     /* constructor/destructor */

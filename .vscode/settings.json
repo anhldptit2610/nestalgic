@@ -47,6 +47,9 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "cinttypes": "cpp",
-        "typeinfo": "cpp"
+        "typeinfo": "cpp",
+        "mmu.h": "c",
+        "cpu.h": "c",
+        "common.h": "c"
     }
 }

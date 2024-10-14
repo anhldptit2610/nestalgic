@@ -104,7 +104,7 @@ int CPU::Step()
 
 uint8_t CPU::ReadByte(uint16_t addr) 
 {  
-    return ReadByte(addr);
+    return pMMU->cpuRead(addr);
 }
 
 uint16_t CPU::ReadWord(uint16_t addr)
@@ -116,11 +116,7 @@ uint16_t CPU::ReadWord(uint16_t addr)
 
 void CPU::WriteByte(uint16_t addr, uint8_t val)
 {
-    RAM[addr] = val; 
-}
-
-void CPU::WriteWord(uint16_t startAddr, uint16_t val)
-{
+    pMMU->cpuWrite(addr, val);
 }
 
 void CPU::PushByte(uint8_t val)
@@ -148,6 +144,21 @@ uint16_t CPU::PopWord()
     return U16(lsb, msb);
 }
 
+void CPU::WriteRAM(uint16_t addr, uint8_t val)
+{
+    pMMU->cpuWrite(addr, val);
+}
+
+uint8_t CPU::ReadRAM(uint16_t addr)
+{
+    return pMMU->cpuRead(addr);
+}
+
+void CPU::Init(MMU *_MMU)
+{
+    pMMU = _MMU;
+}
+
 /* constructor/destructor */
 
 CPU::CPU()
@@ -157,8 +168,6 @@ CPU::CPU()
     regs.S = 0xfd;
     flags.C = flags.Z = flags.D = flags.V = flags.N = 0;
     flags.I = 1;
-
-    memset(RAM, 0, RAM_SIZE);
 }
 
 CPU::~CPU()

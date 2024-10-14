@@ -115,7 +115,6 @@ ETestResult CPUTest::RunTest()
 uint8_t CPUTest::ReadByte(uint16_t addr) {return RAM[addr]; }
 uint16_t CPUTest::ReadWord(uint16_t addr) { return U16(RAM[addr], RAM[addr + 1]); }
 void CPUTest::WriteByte(uint16_t addr, uint8_t val) { RAM[addr] = val; }
-void CPUTest::WriteWord(uint16_t addr, uint16_t val) { RAM[addr] = LSB(val); RAM[addr + 1] = MSB(val); }
 
 CPUTest::CPUTest(char *testFile) : CPU()
 {
