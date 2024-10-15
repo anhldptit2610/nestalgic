@@ -1,5 +1,3 @@
-include(FetchContent)
-
 # Let CMake download yyjson
 FetchContent_Declare(
     yyjson
