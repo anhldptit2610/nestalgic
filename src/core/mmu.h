@@ -1,7 +1,7 @@
 #ifndef MMU_H_
 #define MMU_H_
 
-#include "../common.h"
+#include "common.h"
 
 class MMU {
 private:

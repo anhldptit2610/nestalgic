@@ -1,4 +1,4 @@
-#include "cpu/cpu.h"
+#include "cpu.h"
 
 /* Load/Store Opcodes */
 void CPU::LDA()

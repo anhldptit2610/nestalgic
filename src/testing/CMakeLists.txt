@@ -9,3 +9,6 @@ target_link_libraries(cpu_test PRIVATE
     nestalgic_core
     yyjson
 )
+
+target_include_directories(cpu_test PUBLIC
+    ${CMAKE_SOURCE_DIR}/src/core/)

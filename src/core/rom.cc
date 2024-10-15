@@ -1,4 +1,4 @@
-#include "rom/rom.h"
+#include "rom.h"
 #include <filesystem>
 
 void ROM::PrintROMInfo()
@@ -55,7 +55,12 @@ void ROM::Write(uint16_t addr, uint8_t val)
 {
 }
 
-/* constructor/destructor */
+/* getter, setter */
+
+uint8_t *ROM::GetCHRROM() { return chrROM; }
+
+
+/* constructor, destructor */
 
 ROM::ROM(char *cartPath, bool *quit)
 {

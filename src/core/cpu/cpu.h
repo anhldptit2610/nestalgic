@@ -2,7 +2,7 @@
 #define CPU_H_
 
 #include "../common.h"
-#include "../mmu/mmu.h"
+#include "../mmu.h"
 #include <string>
 
 #define RAM_SIZE                    2 * KiB

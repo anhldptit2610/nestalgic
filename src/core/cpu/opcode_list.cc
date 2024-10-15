@@ -1,4 +1,4 @@
-#include "cpu/cpu.h"
+#include "cpu.h"
 
 Opcode CPU::opcodeList[256] = {
     {"BRK",  AM_IMPL, &CPU::BRK, 7},

@@ -1,4 +1,4 @@
-#include "rom/rom.h"
+#include "../rom.h"
 
 uint8_t ROM::Mapper0Read(uint16_t addr)
 {

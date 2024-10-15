@@ -2,8 +2,8 @@
 #define NESTALGIC_H_
 
 #include "cpu/cpu.h"
-#include "mmu/mmu.h"
-#include "rom/rom.h"
+#include "mmu.h"
+#include "rom.h"
 #include "graphic.h"
 
 class Nestalgic {

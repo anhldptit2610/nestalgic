@@ -12,12 +12,17 @@ SDL::SDL()
 
     window = SDL_CreateWindow("hello world", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-    if (window == nullptr) {
+    if (!window) {
         SDL_Log("Error: SDL_CreateWindow() - %s\n", SDL_GetError());
     }
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == nullptr) {
+    if (!renderer) {
         SDL_Log("Error: SDL_CreateRenderer() - %s\n", SDL_GetError());
+    }
+    patternTable = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
+                        PATTERN_TABLE_WIDTH, PATTERN_TABLE_HEIGHT);
+    if (!patternTable) {
+        SDL_Log("Error: SDL_CreateTExture() - %s\n", SDL_GetError());
     }
 }
 

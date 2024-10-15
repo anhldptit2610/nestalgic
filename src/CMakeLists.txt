@@ -10,5 +10,5 @@ target_link_libraries(nestalgic PRIVATE
     SDL2
 )
 
-target_include_directories(nestalgic PUBLIC ${CMAKE_SOURCE_DIR}/src/include)
+target_include_directories(nestalgic PUBLIC ${CMAKE_SOURCE_DIR}/src/core/)
 target_include_directories(nestalgic PUBLIC ${CMAKE_SOURCE_DIR}/thirdparty/imgui/)

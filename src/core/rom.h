@@ -1,7 +1,7 @@
 #ifndef ROM_H_
 #define ROM_H_
 
-#include "../common.h"
+#include "common.h"
 #include <iostream>
 #include <fstream>
 
@@ -34,6 +34,7 @@ private:
     void Mapper0Write(uint16_t, uint8_t);
 public:
     uint8_t Read(uint16_t);
+    uint8_t *GetCHRROM();
     void Write(uint16_t, uint8_t);
     ROM(char *, bool *);
     ~ROM();
