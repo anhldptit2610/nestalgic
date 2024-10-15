@@ -10,5 +10,5 @@ include(GetYYJSON)
 
 add_compile_options(-Wall)
 
-add_subdirectory(src)
 add_subdirectory(thirdparty)
+add_subdirectory(src)

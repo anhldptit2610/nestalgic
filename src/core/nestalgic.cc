@@ -1,5 +1,11 @@
 #include "nestalgic.h"
 
+void Nestalgic::RunFrame()
+{
+    graphic.GetInput(&quit);
+    graphic.Draw();     
+}
+
 void Nestalgic::Init()
 {
     cpu.Init(&mmu);
