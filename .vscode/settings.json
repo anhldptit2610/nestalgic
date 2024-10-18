@@ -50,6 +50,7 @@
         "typeinfo": "cpp",
         "mmu.h": "c",
         "cpu.h": "c",
-        "common.h": "c"
+        "common.h": "c",
+        "ppu.h": "c"
     }
 }

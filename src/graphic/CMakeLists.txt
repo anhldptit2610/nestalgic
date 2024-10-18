@@ -12,3 +12,4 @@ target_link_libraries(graphic PRIVATE
 )
 
 target_include_directories(graphic PUBLIC ${CMAKE_SOURCE_DIR}/thirdparty/imgui)
+target_include_directories(graphic PUBLIC ${CMAKE_SOURCE_DIR}/src/core/)

@@ -2,9 +2,8 @@
 #define SDL_H_
 
 #include <SDL2/SDL.h>
+#include "common.h"
 
-#define PATTERN_TABLE_WIDTH         (16 * 8 * 2)
-#define PATTERN_TABLE_HEIGHT        (16 * 8)
 
 struct SDL {
     SDL_Window *window = nullptr;
@@ -12,7 +11,7 @@ struct SDL {
     SDL_Texture *patternTable = nullptr;
 
     /* methods */
-
+    void UpdateTexture(uint32_t *);
     /* constructor, destructor */
     SDL();
     ~SDL();

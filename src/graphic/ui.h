@@ -11,7 +11,7 @@ private:
     ImGuiIO *io = nullptr;
     ImVec4 bgColor;
 public:
-    void Frame();
+    void Frame(SDL *);
     void Render(SDL_Renderer *);
     /* constructor, destructor */
     UI(SDL_Window *, SDL_Renderer *) ;

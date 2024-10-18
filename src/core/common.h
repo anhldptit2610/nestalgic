@@ -16,5 +16,18 @@
 #define IN_RANGE(x, a, b)   ((x) >= (a) && (x) <= (b))
 
 #define CPU_RAM_SIZE        2 * KiB
+#define PPU_RAM_SIZE        2 * KiB
+#define PPU_PAL_SIZE        0x0020
+
+#define PATTERN_TABLE_WIDTH         (16 * 8 * 2)
+#define PATTERN_TABLE_HEIGHT        (16 * 8)
+#define SCREEN_WIDTH_TILE           32
+#define SCREEN_HEIGHT_TILE          30
+#define SCREEN_WIDTH                (32 * 8)
+#define SCREEN_HEIGHT               (30 * 8)
+#define OBJ_TABLE_WIDTH             (8 * 8)
+#define OBJ_TABLE_HEIGHT            (8 * 8)
+#define TILE_MAP_WIDTH              SCREEN_WIDTH * 2
+#define TILE_MAP_HEIGHT             SCREEN_HEIGHT * 2
 
 #endif

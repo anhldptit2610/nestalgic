@@ -1,0 +1,1 @@
+add_executable(nestest_log_parser nestest_log_parser.c)

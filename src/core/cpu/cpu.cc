@@ -94,6 +94,7 @@ void CPU::HandleOpcode()
     (this->*opcodeList[instr.opcode].handler)();
 }
 
+
 int CPU::Step()
 {
     GetInstruction();
@@ -104,7 +105,7 @@ int CPU::Step()
 
 uint8_t CPU::ReadByte(uint16_t addr) 
 {  
-    return pMMU->cpuRead(addr);
+    return pMMU->cpuReadByte(addr);
 }
 
 uint16_t CPU::ReadWord(uint16_t addr)
@@ -144,27 +145,41 @@ uint16_t CPU::PopWord()
     return U16(lsb, msb);
 }
 
-void CPU::WriteRAM(uint16_t addr, uint8_t val)
+void CPU::Write(uint16_t addr, uint8_t val)
 {
     pMMU->cpuWrite(addr, val);
 }
 
-uint8_t CPU::ReadRAM(uint16_t addr)
+uint8_t CPU::Read(uint16_t addr)
 {
-    return pMMU->cpuRead(addr);
+    return pMMU->cpuReadByte(addr);
 }
 
 void CPU::Init(MMU *_MMU)
 {
     pMMU = _MMU;
+#if !NESTEST
+    regs.PC = pMMU->cpuReadWord(RESET_START);
+#endif
 }
+
+/* getter/setter */
+
+CPUFlags& CPU::GetCPUFlags() { return flags; }
+CPUInstruction& CPU::GetCPUInstruction() { return instr; }
+CPURegisters& CPU::GetCPURegister() { return regs; }
+uint8_t CPU::GetOpcode() { return ReadByte(regs.PC); }
 
 /* constructor/destructor */
 
 CPU::CPU()
 {
     regs.A = regs.X = regs.Y = 0;
+#if NESTEST
+    regs.PC = 0xc000;
+#else
     regs.PC = 0xfffc;
+#endif
     regs.S = 0xfd;
     flags.C = flags.Z = flags.D = flags.V = flags.N = 0;
     flags.I = 1;

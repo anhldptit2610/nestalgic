@@ -1,6 +1,6 @@
 #include "ui.h"
 
-void UI::Frame()
+void UI::Frame(SDL *pSDL)
 {
     ImGui_ImplSDLRenderer2_NewFrame();
     ImGui_ImplSDL2_NewFrame();
@@ -8,6 +8,10 @@ void UI::Frame()
 
     ImGui::Begin("Hello world");
     ImGui::Text("heeheh");
+    ImGui::End();
+
+    ImGui::Begin("pattern table");
+    ImGui::Image((ImTextureID)pSDL->patternTable, ImVec2(PATTERN_TABLE_WIDTH * 2, PATTERN_TABLE_HEIGHT * 2));
     ImGui::End();
 }
 

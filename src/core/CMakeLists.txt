@@ -1,4 +1,5 @@
-add_library(nestalgic_core STATIC)
+add_library(nestalgic_core STATIC
+        ppu.cc)
 
 add_subdirectory(cpu)
 add_subdirectory(mapper)
@@ -6,7 +7,10 @@ add_subdirectory(mapper)
 target_sources(nestalgic_core PRIVATE
     nestalgic.cc
     mmu.cc
-    rom.cc)
+    rom.cc
+    ppu.cc
+    logging.cc
+)
 
 target_link_libraries(nestalgic_core PRIVATE
     graphic

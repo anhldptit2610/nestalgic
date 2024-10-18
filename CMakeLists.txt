@@ -8,7 +8,19 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 include(FetchContent)
 include(GetYYJSON)
 
+option(LOGGING "Enable logging" OFF)
+option(NESTEST "Enable nestest related" OFF)
+
+if (LOGGING)
+    add_definitions(-DLOGGING=1)
+endif ()
+
+if (NESTEST)
+    add_definitions(-DNESTEST=1)
+endif ()
+
 add_compile_options(-Wall)
 
 add_subdirectory(thirdparty)
 add_subdirectory(src)
+add_subdirectory(utils)

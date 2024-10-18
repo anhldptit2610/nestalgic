@@ -10,6 +10,10 @@
 #define STACK_END                   0x01ff
 #define IRQ_START                   0xfffe
 #define IRQ_END                     0xffff
+#define RESET_START                 0xfffc
+#define RESET_END                   0xfffd
+#define NMI_START                   0xfffa
+#define NMI_END                     0xfffb
 
 class CPU;
 
@@ -66,7 +70,7 @@ typedef struct {
     EAddrMode addressingMode;
     bool pageCrossed;
     int bonusCycles;
-} Instruction;
+} CPUInstruction;
 
 class CPU {
 protected:
@@ -74,7 +78,7 @@ protected:
     CPUFlags flags;
 private:
     static Opcode opcodeList[256];
-    Instruction instr;
+    CPUInstruction instr;
     MMU *pMMU;
 
     /* Load/Store Opcodes */
@@ -195,8 +199,14 @@ private:
     uint8_t PopByte();
     uint16_t PopWord();
 public:
-    void WriteRAM(uint16_t, uint8_t);
-    uint8_t ReadRAM(uint16_t);
+    /* debugging methods */
+    CPURegisters& GetCPURegister();
+    CPUFlags& GetCPUFlags();
+    CPUInstruction& GetCPUInstruction();
+    uint8_t GetOpcode();
+
+    void Write(uint16_t, uint8_t);
+    uint8_t Read(uint16_t);
     int Step();
     void Init(MMU *);
 

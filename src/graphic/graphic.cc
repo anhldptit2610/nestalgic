@@ -12,9 +12,10 @@ void Graphic::GetInput(bool *quit)
     }
 }
 
-void Graphic::Draw()
+void Graphic::Draw(uint32_t *ptFrameBuffer)
 {
-    ui.Frame();
+    sdl.UpdateTexture(ptFrameBuffer);
+    ui.Frame(&sdl);
     ui.Render(sdl.renderer);
 }
 

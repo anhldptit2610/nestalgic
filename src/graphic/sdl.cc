@@ -1,5 +1,11 @@
 #include "sdl.h"
 
+
+void SDL::UpdateTexture(uint32_t *ptFrameBuffer)
+{
+    SDL_UpdateTexture(patternTable, nullptr, ptFrameBuffer, PATTERN_TABLE_WIDTH * 4);
+}
+
 SDL::SDL()
 {
     if (SDL_Init(SDL_INIT_EVERYTHING)) {
