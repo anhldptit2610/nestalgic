@@ -15,8 +15,9 @@ private:
     PPU ppu;
     MMU mmu;
     Graphic graphic;
+    Log log;
+
     int totalCycles;
-    Log log;    
     bool quit;
 public:
     void RunAInstruction();

@@ -4,11 +4,18 @@
 #include "common.h"
 #include "rom.h"
 
-#define PPU_REG_CTRL                        0x2000
-#define PPU_REG_MASK                        0x2001
-#define PPU_REG_STATUS                      0x2002
-#define PPU_REG_ADDR                        0x2006
-#define PPU_REG_DATA                        0x2007
+#define PPU_REG_PPUCTRL                     0x2000      /* Access: write */
+#define PPU_REG_PPUMASK                     0x2001      /* Access: write */
+#define PPU_REG_PPUSTATUS                   0x2002      /* Access: read */
+#define PPU_REG_OAMADDR                     0x2003      /* Access: write */
+#define PPU_REG_OAMDATA                     0x2004      /* Access: read/write */
+#define PPU_REG_PPUSCROLL                   0x2005      /* Access: write x2 */
+#define PPU_REG_PPUADDR                     0x2006      /* Access: write x2 */
+#define PPU_REG_PPUDATA                     0x2007      /* Access: read/write */
+#define PPU_REG_OAMDMA                      0x4014
+
+#define OAM_SIZE                            256
+
 
 typedef enum {
     MIRRORING_HORI,
@@ -51,7 +58,7 @@ private:
             uint8_t unused : 5;
             uint8_t objOverflow : 1;
             uint8_t obj0Hit : 1;
-            uint8_t vblankStared : 1;
+            uint8_t vblankStarted : 1;
         };
     } PPUSTATUS;
     uint16_t VRAMADDR : 15;
@@ -66,7 +73,14 @@ private:
 
     int tick;
     int scanLine;
-    bool frameReady; 
+    bool frameReady;
+    /* NMI */
+    bool oldNMI;
+    bool NMI;
+
+    /* OAM */
+    uint8_t OAM[OAM_SIZE];
+    uint16_t oamAddr;
 
     uint8_t MemRead(uint16_t);
     void MemWrite(uint16_t, uint8_t);
@@ -80,6 +94,7 @@ public:
     /* getter/setter */
     int GetScanline();
     int GetTicks();
+    bool PullNMI();
 
     void SetFrameNotReady();
     void UpdateTables();

@@ -94,6 +94,13 @@ void CPU::HandleOpcode()
     (this->*opcodeList[instr.opcode].handler)();
 }
 
+void CPU::GenerateNMI()
+{
+    PushWord(regs.PC);
+    PushByte(flags.P & ~(1U << 4));
+    flags.I = true;
+    regs.PC = ReadWord(NMI_START);
+}
 
 int CPU::Step()
 {

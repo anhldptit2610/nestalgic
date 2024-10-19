@@ -208,6 +208,7 @@ public:
     void Write(uint16_t, uint8_t);
     uint8_t Read(uint16_t);
     int Step();
+    void GenerateNMI();
     void Init(MMU *);
 
     /* constructor/destructor */

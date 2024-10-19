@@ -38,7 +38,7 @@ uint16_t PPU::NametableUnmirror(uint16_t addr)
 uint8_t PPU::MemRead(uint16_t addr)
 {
     static uint8_t buf = 0;
-    uint8_t ret;
+    uint8_t ret = 0;
 
     ret = buf;
     if (IN_RANGE(addr, 0x0000, 0x1fff)) {           // pattern table range
@@ -46,10 +46,10 @@ uint8_t PPU::MemRead(uint16_t addr)
     } else if (IN_RANGE(addr, 0x2000, 0x2fff)) {    // nametable range
         buf = VRAM[NametableUnmirror(addr)];
     } else if (IN_RANGE(addr, 0x3f00, 0x3fff)) {    // palette RAM indexes
-        addr &= 0x3f1f;
-        addr = (addr == 0x3f10 || addr == 0x3f14 || 
-                addr == 0x3f18 || addr == 0x3f1c) ? 0 : addr - 0x3f00;
-        return paletteRAM[addr];
+        addr = addr & 0x3f1f;
+        if (addr == 0x3f10 || addr == 0x3f14 || addr == 0x3f18 || addr == 0x3f1c)
+            addr = 0x3f00;
+        return paletteRAM[addr - 0x3f00];
     }
     return ret;
 }
@@ -63,22 +63,25 @@ void PPU::MemWrite(uint16_t addr, uint8_t val)
     } else if (IN_RANGE(addr, 0x3f00, 0x3fff)) {    // palette RAM indexes
         addr &= 0x3f1f;
         if (addr == 0x3f10 || addr == 0x3f14 || addr == 0x3f18 || addr == 0x3f1c)
-            addr = 0;
-        paletteRAM[addr] = val;
+            addr = 0x3f00;
+        paletteRAM[addr - 0x3f00] = val;
     }
 }
 
 uint8_t PPU::RegRead(uint16_t addr)
 {
     switch (addr) {
-    case PPU_REG_STATUS:
+    case PPU_REG_PPUSTATUS:
         genLatch = (genLatch & 0x1f) | (PPUSTATUS.raw & 0xe0);
         w = 0;
-        PPUSTATUS.vblankStared = 0;
+        PPUSTATUS.vblankStarted = 0;
         break;
-    case PPU_REG_DATA:
+    case PPU_REG_PPUDATA:
         genLatch = MemRead(v);
-        v += (PPUCTRL.vramIncrement) ? 32 : 1;
+        v += PPUCTRL.vramIncrement;
+        break;
+    case PPU_REG_OAMDATA:
+        genLatch = OAM[oamAddr];
         break;
     default:
         break;
@@ -89,7 +92,7 @@ uint8_t PPU::RegRead(uint16_t addr)
 void PPU::RegWrite(uint16_t addr, uint8_t val)
 {
     switch (addr) {
-    case PPU_REG_CTRL:
+    case PPU_REG_PPUCTRL:
         /* t: ...GH.. ........ <- d: ......GH */
         /*    <used elsewhere> <- d: ABCDEF.. */
         t = (t & 0xf3ff) | (((uint16_t)val & 0x03) << 10);
@@ -102,13 +105,26 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
         PPUCTRL.objHeight = 8 * (1 + (NTHBIT(PPUCTRL.raw, 5)));
         PPUCTRL.vblankNMIEnable = NTHBIT(PPUCTRL.raw, 7);
         break;
-    case PPU_REG_MASK:
+    case PPU_REG_PPUMASK:
         PPUMASK.raw = val;
         break;
-    case PPU_REG_STATUS:
-        PPUSTATUS.raw = val;
+    case PPU_REG_OAMADDR:
+        oamAddr = val;
         break;
-    case PPU_REG_ADDR:
+    case PPU_REG_OAMDATA:
+        OAM[oamAddr++] = val;
+        break; 
+    case PPU_REG_PPUSCROLL:
+        if (!w) {
+            t = (t & 0xffe0) | (uint16_t)(val >> 3);
+            x = val & 0x07;
+            w = 1;
+        } else if (w == 1) {
+            t = (t & 0x8c1f) | (((uint16_t)val & 0x07) << 12) | (((uint16_t)val >> 3) << 5);
+            w = 0;
+        }
+        break;
+    case PPU_REG_PPUADDR:
         if (!w) {
             t = (t & 0xc0ff) | ((uint16_t)(val & 0x3f) << 8);
             t = t & ~(1U << 14);
@@ -119,7 +135,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
             w = 0;
         }
         break;
-    case PPU_REG_DATA:
+    case PPU_REG_PPUDATA:
         MemWrite(v, val);
         v += PPUCTRL.vramIncrement;
         break;
@@ -151,8 +167,7 @@ void PPU::UpdatePatternTable()
                 msb = pROM->chrROMRead(tileAddr + k + 8);
                 for (int l = 0; l < 8; l++) {
                     pixel = NTHBIT(lsb, 7 - l) | (NTHBIT(msb, 7 - l) << 1);
-                    ptFrameBuffer[l + j * 8 + PATTERN_TABLE_WIDTH * (k + 8 * i)] = PALETTE[pixel];
-                    // ptFrameBuffer[l + j * 8 + PATTERN_TABLE_WIDTH * (k + 8 * i)] = PALETTE[ReadPaletteRAM(0x3f00 + pixel)];
+                    ptFrameBuffer[l + j * 8 + PATTERN_TABLE_WIDTH * (k + 8 * i)] = PALETTE[ReadPaletteRAM(0x3f00 + pixel)];
                 }
             }
         }
@@ -167,8 +182,7 @@ void PPU::UpdatePatternTable()
                 msb = pROM->chrROMRead(tileAddr + k + 8);
                 for (int l = 0; l < 8; l++) {
                     pixel = NTHBIT(lsb, 7 - l) | (NTHBIT(msb, 7 - l) << 1);
-                    ptFrameBuffer[l + 16 * 8 + j * 8 + PATTERN_TABLE_WIDTH * (k + 8 * i)] = PALETTE[pixel];
-                    // ptFrameBuffer[l + j * 8 + PATTERN_TABLE_WIDTH * (k + 8 * i)] = PALETTE[ReadPaletteRAM(0x3f00 + pixel)];
+                    ptFrameBuffer[l + 16 * 8 + j * 8 + PATTERN_TABLE_WIDTH * (k + 8 * i)] = PALETTE[ReadPaletteRAM(0x3f00 + pixel)];
                 }
             }
         }
@@ -187,13 +201,16 @@ void PPU::Step(int cycle)
         tick -= 340;
         if (scanLine == SCREEN_HEIGHT - 1) {
             frameReady = true;
-            // it's time to draw something...
             // and vblank starts
+            PPUSTATUS.vblankStarted = true;
         } else if (scanLine == TOTAL_SCANLINE - 1) {
             // vblank ends now
+            PPUSTATUS.vblankStarted = false;
         }
         scanLine = (scanLine == TOTAL_SCANLINE - 1) ? 0 : scanLine + 1;
     }
+    oldNMI = NMI;
+    NMI = (PPUSTATUS.vblankStarted && PPUCTRL.vblankNMIEnable) ? false : true;
 }
 
 void PPU::Init(ROM *_ROM, int _mirroring)
@@ -204,39 +221,22 @@ void PPU::Init(ROM *_ROM, int _mirroring)
 #else
     tick = 0;
 #endif
+    w = 0;
     scanLine = 0;
     genLatch = 0;
     frameReady = false;
     memset(ptFrameBuffer, 0, sizeof(ptFrameBuffer));
-    // memset(ptFrameBuffer, 0xffffffff, sizeof(ptFrameBuffer));
     pROM = _ROM;
+    oldNMI = NMI = true;
 }
 
-bool PPU::IsFrameReady()
-{
-    return frameReady;
-}    
+bool PPU::IsFrameReady() { return frameReady; }
+int PPU::GetScanline() { return scanLine; }
+int PPU::GetTicks() { return tick; }
+bool PPU::PullNMI() { return (oldNMI && !NMI); }
+void PPU::SetFrameNotReady() { frameReady = false; }
+uint32_t *PPU::GetPTFrameBuffer() { return ptFrameBuffer; }
 
-int PPU::GetScanline()
-{
-    return scanLine;
-}
-
-int PPU::GetTicks()
-{
-    return tick;
-}
-
-void PPU::SetFrameNotReady()
-{
-    frameReady = false;
-}
-    
-uint32_t *PPU::GetPTFrameBuffer()
-{
-    return ptFrameBuffer;
-}
-
+/* constructor, destructor */
 PPU::PPU() { }
-
 PPU::~PPU() { }

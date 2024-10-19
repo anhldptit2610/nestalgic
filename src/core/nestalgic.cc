@@ -21,6 +21,8 @@ void Nestalgic::RunFrame()
                         cpu.GetOpcode(), cpu.GetCPURegister(), cpu.GetCPUFlags());
         cycles = cpu.Step();
         ppu.Step(cycles);
+        if (ppu.PullNMI())
+            cpu.GenerateNMI();
     }
     ppu.SetFrameNotReady();
     ppu.UpdateTables();

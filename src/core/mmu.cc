@@ -38,6 +38,8 @@ void MMU::cpuWrite(uint16_t addr, uint8_t val)
         break;
     case 2:
     case 3:
+        if (IN_RANGE(addr, 0x3000, 0x3fff))
+            printf("ppu reg write. Addr: %04x val: %02x\n", addr, val);
         ppuRegWrite(addr & 0x2007, val);
         break;
     default:
