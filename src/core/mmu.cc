@@ -1,9 +1,12 @@
 #include "mmu.h"
 
-void MMU::Init(PPU *_ppu, ROM *_rom)
+#include <pstl/unseq_backend_simd.h>
+
+void MMU::Init(PPU *_ppu, ROM *_rom, Controller *_controller)
 {
     pPPU = _ppu;
     pROM = _rom;
+    pController = _controller;
 }
 
 uint8_t MMU::ppuRegRead(uint16_t addr) { return pPPU->RegRead(addr); }
@@ -21,6 +24,14 @@ uint8_t MMU::cpuReadByte(uint16_t addr)
     case 2:
     case 3:
         return ppuRegRead(addr & 0x2007);
+    case 4:
+        switch (addr & 0xff) {
+        case 0x16:
+        case 0x17:
+            return pController->Read(addr);
+        default:
+            break;
+        }
     default:
         if (IN_RANGE(addr, 0x8000, 0xffff))
             return pROM->prgROMRead(addr);
@@ -42,6 +53,15 @@ void MMU::cpuWrite(uint16_t addr, uint8_t val)
             printf("ppu reg write. Addr: %04x val: %02x\n", addr, val);
         ppuRegWrite(addr & 0x2007, val);
         break;
+    case 4:
+        switch (addr & 0xff) {
+        case 0x16:
+        case 0x17:
+            pController->Write(addr, val);
+            break;
+        default:
+            break;
+        }
     default:
         if (IN_RANGE(addr, 0x8000, 0xffff))
             pROM->prgROMWrite(addr, val);

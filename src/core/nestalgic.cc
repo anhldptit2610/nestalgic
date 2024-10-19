@@ -26,7 +26,7 @@ void Nestalgic::RunFrame()
     }
     ppu.SetFrameNotReady();
     ppu.UpdateTables();
-    graphic.GetInput(&quit);
+    graphic.GetInput(&quit, controller.GetAllButtons());
     graphic.Draw(ppu.GetScreenFrameBuffer(), ppu.GetPTFrameBuffer());
 }
 
@@ -37,7 +37,7 @@ void Nestalgic::Init()
 #else 
     totalCycles = 0;
 #endif
-    mmu.Init(&ppu, &rom);
+    mmu.Init(&ppu, &rom, &controller);
     cpu.Init(&mmu);
     ppu.Init(&rom, rom.GetMirroringType());
 }

@@ -1,5 +1,5 @@
 add_library(nestalgic_core STATIC
-        ppu.cc)
+        controller.h)
 
 add_subdirectory(cpu)
 add_subdirectory(mapper)
@@ -10,6 +10,7 @@ target_sources(nestalgic_core PRIVATE
     rom.cc
     ppu.cc
     logging.cc
+    controller.cpp
 )
 
 target_link_libraries(nestalgic_core PRIVATE

@@ -13,6 +13,7 @@ private:
     ROM rom;
     CPU cpu;
     PPU ppu;
+    Controller controller;
     MMU mmu;
     Graphic graphic;
     Log log;
