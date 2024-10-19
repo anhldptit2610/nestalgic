@@ -9,9 +9,10 @@ struct SDL {
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
     SDL_Texture *patternTable = nullptr;
+    SDL_Texture *screen = nullptr;
 
     /* methods */
-    void UpdateTexture(uint32_t *);
+    void UpdateTexture(uint32_t *, uint32_t *);
     /* constructor, destructor */
     SDL();
     ~SDL();

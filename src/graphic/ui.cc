@@ -13,6 +13,10 @@ void UI::Frame(SDL *pSDL)
     ImGui::Begin("pattern table");
     ImGui::Image((ImTextureID)pSDL->patternTable, ImVec2(PATTERN_TABLE_WIDTH * 2, PATTERN_TABLE_HEIGHT * 2));
     ImGui::End();
+
+    ImGui::Begin("screen");
+    ImGui::Image((ImTextureID)pSDL->screen, ImVec2(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2));
+    ImGui::End();
 }
 
 void UI::Render(SDL_Renderer *pRenderer)

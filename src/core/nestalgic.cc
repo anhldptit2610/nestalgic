@@ -27,7 +27,7 @@ void Nestalgic::RunFrame()
     ppu.SetFrameNotReady();
     ppu.UpdateTables();
     graphic.GetInput(&quit);
-    graphic.Draw(ppu.GetPTFrameBuffer());     
+    graphic.Draw(ppu.GetScreenFrameBuffer(), ppu.GetPTFrameBuffer());
 }
 
 void Nestalgic::Init()

@@ -29,6 +29,7 @@ private:
     uint8_t paletteRAM[PPU_PAL_SIZE];
     ROM *pROM = nullptr;
     uint32_t ptFrameBuffer[PATTERN_TABLE_HEIGHT * PATTERN_TABLE_WIDTH];
+    uint32_t screenFrameBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
 
     struct PPUCTRL {        /* Read/Write */
         uint8_t raw;
@@ -69,14 +70,20 @@ private:
     uint16_t v : 15;
     uint16_t t : 15;
     uint8_t x : 3;
-    bool w;
+    uint8_t w : 1;
 
     int tick;
     int scanLine;
     bool frameReady;
+
     /* NMI */
     bool oldNMI;
     bool NMI;
+
+    /* scrolling */
+    uint8_t yScroll = 0;
+    uint8_t xScroll = 0;
+    uint8_t nametable;
 
     /* OAM */
     uint8_t OAM[OAM_SIZE];
@@ -87,6 +94,11 @@ private:
     uint16_t NametableUnmirror(uint16_t);
     uint8_t ReadPaletteRAM(uint16_t);
     void UpdatePatternTable();
+    void DrawBackgroundOnScanline();
+    void DrawSpriteOnScanline();
+    void DrawScanline();
+    uint8_t MemReadNoBuf(uint16_t);
+    uint8_t GetAttributeTableEntry(unsigned, int, int);
 
     // TODO: scrolling
     // TODO: oamdma
@@ -95,11 +107,12 @@ public:
     int GetScanline();
     int GetTicks();
     bool PullNMI();
+    uint32_t *GetPTFrameBuffer();
+    uint32_t *GetScreenFrameBuffer();
 
     void SetFrameNotReady();
     void UpdateTables();
-    uint32_t *GetPTFrameBuffer();
-    bool IsFrameReady();    
+    bool IsFrameReady();
     uint8_t RegRead(uint16_t);
     void RegWrite(uint16_t, uint8_t);
     void Init(ROM *, int);

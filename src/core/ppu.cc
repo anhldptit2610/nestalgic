@@ -35,6 +35,25 @@ uint16_t PPU::NametableUnmirror(uint16_t addr)
     return 0;
 }
 
+uint8_t PPU::GetAttributeTableEntry(unsigned nametable, int x, int y)
+{
+    uint16_t atBaseAddr = 0x23c0 + 0x0400 * nametable;
+    x /= 4;
+    y /= 4;
+    return MemReadNoBuf(atBaseAddr + y * 8 + x);
+}
+
+uint8_t PPU::MemReadNoBuf(uint16_t addr)
+{
+    if (IN_RANGE(addr, 0x0000, 0x1fff))           // pattern table range
+        return pROM->chrROMRead(addr & 0x1fff);
+    else if (IN_RANGE(addr, 0x2000, 0x2fff))    // nametable range
+        return VRAM[NametableUnmirror(addr)];
+    else if (IN_RANGE(addr, 0x3f00, 0x3fff))    // palette RAM indexes
+        return ReadPaletteRAM(addr);
+    return 0xff;
+}
+
 uint8_t PPU::MemRead(uint16_t addr)
 {
     static uint8_t buf = 0;
@@ -116,21 +135,21 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
         break; 
     case PPU_REG_PPUSCROLL:
         if (!w) {
-            t = (t & 0xffe0) | (uint16_t)(val >> 3);
+            t = (t & 0xffe0) | static_cast<uint16_t>(val >> 3);
             x = val & 0x07;
             w = 1;
         } else if (w == 1) {
-            t = (t & 0x8c1f) | (((uint16_t)val & 0x07) << 12) | (((uint16_t)val >> 3) << 5);
+            t = (t & 0x8c1f) | ((static_cast<uint16_t>(val) & 0x07) << 12) | ((static_cast<uint16_t>(val) >> 3) << 5);
             w = 0;
         }
         break;
     case PPU_REG_PPUADDR:
         if (!w) {
-            t = (t & 0xc0ff) | ((uint16_t)(val & 0x3f) << 8);
+            t = (t & 0xc0ff) | (static_cast<uint16_t>(val & 0x3f) << 8);
             t = t & ~(1U << 14);
             w = 1;
         } else if (w == 1) {
-            t = (t & 0xff00) | ((uint16_t)val & 0x00ff);
+            t = (t & 0xff00) | (static_cast<uint16_t>(val) & 0x00ff);
             v = t;
             w = 0;
         }
@@ -148,6 +167,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
 
 uint8_t PPU::ReadPaletteRAM(uint16_t addr)
 {
+    addr &= 0x3f1f;
     if (addr == 0x3f10 || addr == 0x3f14 || addr == 0x3f18 || addr == 0x3f1c)
         addr = 0x3f00;
     return paletteRAM[addr - 0x3f00]; 
@@ -194,11 +214,87 @@ void PPU::UpdateTables()
     UpdatePatternTable();
 }
 
+void PPU::DrawBackgroundOnScanline()
+{
+    uint16_t ntBaseAddr, tileBaseAddr, paletteEntry;
+    uint8_t ntEntry, atEntry, firstPlane, secondPlane, pixel, nametable = 0, scanLine,
+            xPos, tileRenderStart, tileRenderSize;
+
+    if (PPUMASK.bgRenderingEnable) {
+        // X scroll handling
+        if (this->xScroll >= SCREEN_WIDTH) {
+            if (this->nametable == 0 || this->nametable == 2)
+                this->nametable += 1;
+            else if (this->nametable == 1 || this->nametable == 3)
+                this->nametable -= 1;
+            this->xScroll -= SCREEN_WIDTH;
+            xPos = this->xScroll - SCREEN_WIDTH;
+        } else {
+            xPos = this->xScroll;
+            nametable = this->nametable;
+        }
+        // Y scroll handling
+        if (this->yScroll + this->scanLine >= SCREEN_HEIGHT) {
+            if (nametable == 0 || nametable == 1)
+                nametable = this->nametable + 2;
+            else if (nametable == 2 || nametable == 3)
+                nametable = this->nametable - 2;
+            scanLine = this->yScroll + this->scanLine - 240;
+        } else {
+            nametable = this->nametable;
+            scanLine = this->yScroll + this->scanLine;
+        }
+        for (int k = 0; k < SCREEN_WIDTH;) {
+            ntBaseAddr = 0x2000 + 0x0400 * nametable;
+            ntEntry = MemReadNoBuf(ntBaseAddr + (scanLine / 8) * SCREEN_WIDTH_TILE + xPos / 8);
+            atEntry = GetAttributeTableEntry(nametable, xPos / 8, scanLine / 8);
+            atEntry = (atEntry >> ((((scanLine / 8) % 4) / 2 * 2 + ((xPos / 8) % 4) / 2) * 2)) & 0x03;
+            tileBaseAddr = PPUCTRL.bgPTAddr + ntEntry * 16;
+            firstPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8));
+            secondPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8) + 8);
+            tileRenderStart = xPos % 8;
+            tileRenderSize = 8 - (xPos % 8);
+
+            for (int j = tileRenderStart; j < tileRenderStart + tileRenderSize; j++) {
+                pixel = NTHBIT(firstPlane, 7 - j) | (NTHBIT(secondPlane, 7 - j) << 1);
+                paletteEntry = (0x3f00 + (pixel | (atEntry << 2)));
+                screenFrameBuffer[this->scanLine * SCREEN_WIDTH + k] = PALETTE[MemReadNoBuf(paletteEntry)];
+                k++;
+            }
+            if (xPos + tileRenderSize >= SCREEN_WIDTH) {
+                xPos = xPos + tileRenderSize - SCREEN_WIDTH;
+                if (nametable == 0 || nametable == 2)
+                    nametable += 1;
+                else if (nametable == 1 || nametable == 3)
+                    nametable -= 1;
+            } else {
+                xPos += tileRenderSize;
+            }
+        }
+    }
+}
+
+void PPU::DrawSpriteOnScanline()
+{
+
+}
+
+void PPU::DrawScanline()
+{
+    DrawBackgroundOnScanline();
+    DrawSpriteOnScanline();
+}
+
 void PPU::Step(int cycle)
 {
     tick += cycle * 3;
     if (tick > 340) {
+        if (scanLine < 240)
+            DrawScanline();
         tick -= 340;
+        yScroll = ((t >> 5) & 0x001f) * 8 + ((t >> 12) & 0x0007);
+        xScroll = (t & 0x001f) * 8 + x;
+        nametable = (t >> 10) & 0x03;
         if (scanLine == SCREEN_HEIGHT - 1) {
             frameReady = true;
             // and vblank starts
@@ -213,9 +309,9 @@ void PPU::Step(int cycle)
     NMI = (PPUSTATUS.vblankStarted && PPUCTRL.vblankNMIEnable) ? false : true;
 }
 
-void PPU::Init(ROM *_ROM, int _mirroring)
+void PPU::Init(ROM *ROM, int _mirroring)
 {
-    mirrorring = (EMirroring)_mirroring;
+    mirrorring = static_cast<EMirroring>(_mirroring);
 #if NESTEST
     tick = 21;
 #else
@@ -226,8 +322,10 @@ void PPU::Init(ROM *_ROM, int _mirroring)
     genLatch = 0;
     frameReady = false;
     memset(ptFrameBuffer, 0, sizeof(ptFrameBuffer));
-    pROM = _ROM;
+    pROM = ROM;
     oldNMI = NMI = true;
+    yScroll = xScroll = 0;
+    nametable = 0;
 }
 
 bool PPU::IsFrameReady() { return frameReady; }
@@ -236,6 +334,7 @@ int PPU::GetTicks() { return tick; }
 bool PPU::PullNMI() { return (oldNMI && !NMI); }
 void PPU::SetFrameNotReady() { frameReady = false; }
 uint32_t *PPU::GetPTFrameBuffer() { return ptFrameBuffer; }
+uint32_t *PPU::GetScreenFrameBuffer() { return screenFrameBuffer; }
 
 /* constructor, destructor */
 PPU::PPU() { }

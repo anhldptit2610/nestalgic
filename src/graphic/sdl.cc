@@ -1,9 +1,10 @@
 #include "sdl.h"
 
 
-void SDL::UpdateTexture(uint32_t *ptFrameBuffer)
+void SDL::UpdateTexture(uint32_t *screenFrameBuffer, uint32_t *ptFrameBuffer)
 {
     SDL_UpdateTexture(patternTable, nullptr, ptFrameBuffer, PATTERN_TABLE_WIDTH * 4);
+    SDL_UpdateTexture(screen, nullptr, screenFrameBuffer, SCREEN_WIDTH * 4);
 }
 
 SDL::SDL()
@@ -28,7 +29,12 @@ SDL::SDL()
     patternTable = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
                         PATTERN_TABLE_WIDTH, PATTERN_TABLE_HEIGHT);
     if (!patternTable) {
-        SDL_Log("Error: SDL_CreateTExture() - %s\n", SDL_GetError());
+        SDL_Log("Error: SDL_CreateTexture() - %s\n", SDL_GetError());
+    }
+    screen = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING,
+                        SCREEN_WIDTH, SCREEN_HEIGHT);
+    if (!screen) {
+        SDL_Log("Error: SDL_CreateTexture() - %s\n", SDL_GetError());
     }
 }
 
