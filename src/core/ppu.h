@@ -47,15 +47,25 @@ private:
     uint32_t objFrameBuffer[OBJ_TABLE_HEIGHT * OBJ_TABLE_WIDTH];
     uint32_t screenFrameBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
 
-    struct PPUCTRL {        /* Read/Write */
+    union {
+        /* Read/Write */
         uint8_t raw;
-        uint16_t baseNTAddr;
-        uint8_t vramIncrement;
-        uint16_t objPTAddr;
-        uint16_t bgPTAddr;
-        uint8_t objHeight;
-        bool vblankNMIEnable;
+        struct {
+            uint8_t baseNTAddr : 2;
+            uint8_t vramIncrement : 1;
+            uint8_t objPTAddr : 1;
+            uint8_t bgPTAddr : 1;
+            uint8_t objHeight : 1;
+            uint8_t ppuMasterSelect : 1;
+            uint8_t vblankNMIEnable : 1;
+        };
     } PPUCTRL;
+    uint16_t baseNTAddr;
+    uint8_t vramIncrement;
+    uint16_t objPTAddr;
+    uint16_t bgPTAddr;
+    uint8_t objHeight;
+    bool vblankNMIEnable;
     union PPUMASK {         /* Read/Write */
         uint8_t raw;
         struct {

@@ -93,7 +93,7 @@ uint8_t PPU::RegRead(uint16_t addr)
         break;
     case PPU_REG_PPUDATA:
         genLatch = MemRead(v);
-        v += PPUCTRL.vramIncrement;
+        v += (PPUCTRL.vramIncrement) ? 32 : 1;
         break;
     case PPU_REG_OAMDATA:
         genLatch = OAM[oamAddr];
@@ -111,14 +111,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
         /* t: ...GH.. ........ <- d: ......GH */
         /*    <used elsewhere> <- d: ABCDEF.. */
         t = (t & 0xf3ff) | ((static_cast<uint16_t>(val) & 0x03) << 10);
-
         PPUCTRL.raw = val;
-        PPUCTRL.baseNTAddr = 0x2000 + (PPUCTRL.raw & 0x03);
-        PPUCTRL.vramIncrement = (NTHBIT(PPUCTRL.raw, 2)) ? 32 : 1;
-        PPUCTRL.objPTAddr = (NTHBIT(PPUCTRL.raw, 3)) ? 0x1000 : 0x0000;
-        PPUCTRL.bgPTAddr = (NTHBIT(PPUCTRL.raw, 4)) ? 0x1000 : 0x0000;
-        PPUCTRL.objHeight = 8 * (1 + (NTHBIT(PPUCTRL.raw, 5)));
-        PPUCTRL.vblankNMIEnable = NTHBIT(PPUCTRL.raw, 7);
         break;
     case PPU_REG_PPUMASK:
         PPUMASK.raw = val;
@@ -152,7 +145,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
         break;
     case PPU_REG_PPUDATA:
         MemWrite(v, val);
-        v += PPUCTRL.vramIncrement;
+        v += (PPUCTRL.vramIncrement) ? 32 : 1;
         break;
     default:
         break;
@@ -219,7 +212,8 @@ void PPU::UpdateObjTable()
             OAMEntry entry;
             entry.tileIndex = OAM[(i * 8 + j) * 4 + 1];
             entry.attribute.raw = OAM[(i * 8 + j) * 4 + 2];
-            const uint16_t tileAddr = PPUCTRL.objPTAddr + entry.tileIndex * 16;
+            const uint16_t objPTAddr = 0x1000 * PPUCTRL.objPTAddr;
+            const uint16_t tileAddr = objPTAddr + entry.tileIndex * 16;
             for (int k = 0; k < 8; k++) {
                 const uint8_t lsb = pROM->chrROMRead(tileAddr + k);
                 const uint8_t msb = pROM->chrROMRead(tileAddr + k + 8);
@@ -275,7 +269,7 @@ void PPU::DrawBackgroundOnScanline()
             const uint8_t ntEntry = MemReadNoBuf(ntBaseAddr + (scanLine / 8) * SCREEN_WIDTH_TILE + xPos / 8);
             uint8_t atEntry = GetAttributeTableEntry(nametable, xPos / 8, scanLine / 8);
             atEntry = (atEntry >> ((((scanLine / 8) % 4) / 2 * 2 + ((xPos / 8) % 4) / 2) * 2)) & 0x03;
-            const uint16_t tileBaseAddr = PPUCTRL.bgPTAddr + ntEntry * 16;
+            const uint16_t tileBaseAddr = (0x1000 * PPUCTRL.bgPTAddr) + (ntEntry * 16);
             const uint8_t firstPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8));
             const uint8_t secondPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8) + 8);
             const uint8_t tileRenderStart = xPos % 8;
@@ -322,7 +316,7 @@ void PPU::DrawSpriteOnScanline()
     // then draw all of them into the scanline
     for (int i = 0; i < index; i++) {
         uint8_t firstPlane, secondPlane;
-        const uint16_t tileBaseAddr = PPUCTRL.objPTAddr + oamMemory[i].tileIndex * 16;
+        const uint16_t tileBaseAddr = (0x1000 * PPUCTRL.objPTAddr) + oamMemory[i].tileIndex * 16;
         if (!oamMemory[i].attribute.flipOBJVertically) {
             firstPlane = MemReadNoBuf(tileBaseAddr + (this->scanLine - oamMemory[i].yPos));
             secondPlane = MemReadNoBuf(tileBaseAddr + (this->scanLine - oamMemory[i].yPos) + 8);
