@@ -16,6 +16,21 @@
 
 #define OAM_SIZE                            256
 
+typedef struct {
+    uint8_t yPos;
+    uint8_t tileIndex;
+    union {
+        uint8_t raw;
+        struct {
+            uint8_t palette : 2;
+            uint8_t unused : 3;
+            uint8_t priority : 1;
+            uint8_t flipOBJHorizontally : 1;
+            uint8_t flipOBJVertically : 1;
+        };
+    } attribute;
+    uint8_t xPos;
+} OAMEntry;
 
 typedef enum {
     MIRRORING_HORI,
@@ -109,6 +124,7 @@ public:
     bool PullNMI();
     uint32_t *GetPTFrameBuffer();
     uint32_t *GetScreenFrameBuffer();
+    uint8_t * GetOAM();
 
     void SetFrameNotReady();
     void UpdateTables();
@@ -117,6 +133,8 @@ public:
     void RegWrite(uint16_t, uint8_t);
     void Init(ROM *, int);
     void Step(int);
+
+    /* constructor, destructor */
     PPU();
     ~PPU();
 };

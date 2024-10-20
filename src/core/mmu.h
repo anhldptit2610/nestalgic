@@ -21,6 +21,7 @@ public:
     void ppuRegWrite(uint16_t, uint8_t);
 
     void Init(PPU *, ROM *, Controller *);
+    void RunOAMDMA(uint8_t *, uint16_t);
 
     /* constructor/destructor */
     MMU();
