@@ -8,10 +8,9 @@ class Graphic {
 private:
     SDL sdl;
     UI ui;
-    uint8_t *patternTable = nullptr;
 public:
     void GetInput(bool *, bool *);
-    void Draw(uint32_t *, uint32_t *);
+    void Draw(uint32_t *, uint32_t *, uint32_t *);
     /* constructor, destructor */
     Graphic();
     ~Graphic();

@@ -15,7 +15,7 @@ uint32_t PALETTE[64] = {
     0xF8D878FF, 0xD8F878FF, 0xB8F8B8FF, 0xB8F8D8FF, 0x00FCFCFF, 0xF8D8F8FF, 0x000000FF, 0x000000FF,
 };
 
-uint16_t PPU::NametableUnmirror(uint16_t addr)
+uint16_t PPU::NametableUnmirror(uint16_t addr) const
 {
     switch (mirrorring) {
     case MIRRORING_HORI:
@@ -35,7 +35,7 @@ uint16_t PPU::NametableUnmirror(uint16_t addr)
     return 0;
 }
 
-uint8_t PPU::GetAttributeTableEntry(unsigned nametable, int x, int y)
+uint8_t PPU::GetAttributeTableEntry(unsigned nametable, int x, int y) const
 {
     uint16_t atBaseAddr = 0x23c0 + 0x0400 * nametable;
     x /= 4;
@@ -43,9 +43,9 @@ uint8_t PPU::GetAttributeTableEntry(unsigned nametable, int x, int y)
     return MemReadNoBuf(atBaseAddr + y * 8 + x);
 }
 
-uint8_t PPU::MemReadNoBuf(uint16_t addr)
+uint8_t PPU::MemReadNoBuf(uint16_t addr) const
 {
-    if (IN_RANGE(addr, 0x0000, 0x1fff))           // pattern table range
+    if (IN_RANGE(addr, 0x0000, 0x1fff))         // pattern table range
         return pROM->chrROMRead(addr & 0x1fff);
     else if (IN_RANGE(addr, 0x2000, 0x2fff))    // nametable range
         return VRAM[NametableUnmirror(addr)];
@@ -54,7 +54,7 @@ uint8_t PPU::MemReadNoBuf(uint16_t addr)
     return 0xff;
 }
 
-uint8_t PPU::MemRead(uint16_t addr)
+uint8_t PPU::MemRead(uint16_t addr) const
 {
     static uint8_t buf = 0;
     uint8_t ret = 0;
@@ -77,6 +77,8 @@ void PPU::MemWrite(uint16_t addr, uint8_t val)
         VRAM[NametableUnmirror(addr)] = val;
     } else if (IN_RANGE(addr, 0x3f00, 0x3fff)) {    // palette RAM indexes
         addr &= 0x3f1f;
+        if (addr == 0x3f10 || addr == 0x3f14 || addr == 0x3f18 || addr == 0x3f1c)
+            addr -= 0x0010;
         paletteRAM[addr - 0x3f00] = val;
     }
 }
@@ -108,7 +110,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
     case PPU_REG_PPUCTRL:
         /* t: ...GH.. ........ <- d: ......GH */
         /*    <used elsewhere> <- d: ABCDEF.. */
-        t = (t & 0xf3ff) | (((uint16_t)val & 0x03) << 10);
+        t = (t & 0xf3ff) | ((static_cast<uint16_t>(val) & 0x03) << 10);
 
         PPUCTRL.raw = val;
         PPUCTRL.baseNTAddr = 0x2000 + (PPUCTRL.raw & 0x03);
@@ -159,7 +161,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
 }
 
 
-uint8_t PPU::ReadPaletteRAM(uint16_t addr)
+uint8_t PPU::ReadPaletteRAM(uint16_t addr) const
 {
     auto IsAddrPaletteFirstEntry = [](uint16_t addr, uint8_t pal) -> bool {
         return (addr & 0x000f) == (pal * 4);
@@ -210,18 +212,41 @@ void PPU::UpdatePatternTable()
     }
 }
 
+void PPU::UpdateObjTable()
+{
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            OAMEntry entry;
+            entry.tileIndex = OAM[(i * 8 + j) * 4 + 1];
+            entry.attribute.raw = OAM[(i * 8 + j) * 4 + 2];
+            const uint16_t tileAddr = PPUCTRL.objPTAddr + entry.tileIndex * 16;
+            for (int k = 0; k < 8; k++) {
+                const uint8_t lsb = pROM->chrROMRead(tileAddr + k);
+                const uint8_t msb = pROM->chrROMRead(tileAddr + k + 8);
+                for (int l = 0; l < 8; l++) {
+                    const uint8_t pixel = (!entry.attribute.flipOBJHorizontally)
+                                              ? NTHBIT(lsb, 7 - l) | (NTHBIT(msb, 7 - l) << 1)
+                                              : NTHBIT(lsb, l) | (NTHBIT(msb, l) << 1);
+                    objFrameBuffer[l + j * 8 + 64 * (k + 8 * i)] =
+                        PALETTE[ReadPaletteRAM(0x3f00 + (pixel | (entry.attribute.palette << 2) | (1U << 4)))];
+                }
+            }
+        }
+    }
+}
+
 void PPU::UpdateTables()
 {
     UpdatePatternTable();
+    UpdateObjTable();
 }
 
 void PPU::DrawBackgroundOnScanline()
 {
-    uint16_t ntBaseAddr, tileBaseAddr, paletteEntry;
-    uint8_t ntEntry, atEntry, firstPlane, secondPlane, pixel, nametable = 0, scanLine,
-            xPos, tileRenderStart, tileRenderSize;
-
     if (PPUMASK.bgRenderingEnable) {
+        uint8_t nametable = 0, scanLine,
+            xPos;
+
         // X scroll handling
         if (this->xScroll >= SCREEN_WIDTH) {
             if (this->nametable == 0 || this->nametable == 2)
@@ -246,19 +271,19 @@ void PPU::DrawBackgroundOnScanline()
             scanLine = this->yScroll + this->scanLine;
         }
         for (int k = 0; k < SCREEN_WIDTH;) {
-            ntBaseAddr = 0x2000 + 0x0400 * nametable;
-            ntEntry = MemReadNoBuf(ntBaseAddr + (scanLine / 8) * SCREEN_WIDTH_TILE + xPos / 8);
-            atEntry = GetAttributeTableEntry(nametable, xPos / 8, scanLine / 8);
+            const uint16_t ntBaseAddr = 0x2000 + 0x0400 * nametable;
+            const uint8_t ntEntry = MemReadNoBuf(ntBaseAddr + (scanLine / 8) * SCREEN_WIDTH_TILE + xPos / 8);
+            uint8_t atEntry = GetAttributeTableEntry(nametable, xPos / 8, scanLine / 8);
             atEntry = (atEntry >> ((((scanLine / 8) % 4) / 2 * 2 + ((xPos / 8) % 4) / 2) * 2)) & 0x03;
-            tileBaseAddr = PPUCTRL.bgPTAddr + ntEntry * 16;
-            firstPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8));
-            secondPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8) + 8);
-            tileRenderStart = xPos % 8;
-            tileRenderSize = 8 - (xPos % 8);
+            const uint16_t tileBaseAddr = PPUCTRL.bgPTAddr + ntEntry * 16;
+            const uint8_t firstPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8));
+            const uint8_t secondPlane = MemReadNoBuf(tileBaseAddr + (scanLine % 8) + 8);
+            const uint8_t tileRenderStart = xPos % 8;
+            const uint8_t tileRenderSize = 8 - (xPos % 8);
 
             for (int j = tileRenderStart; j < tileRenderStart + tileRenderSize; j++) {
-                pixel = NTHBIT(firstPlane, 7 - j) | (NTHBIT(secondPlane, 7 - j) << 1);
-                paletteEntry = (0x3f00 + (pixel | (atEntry << 2)));
+                const uint8_t pixel = NTHBIT(firstPlane, 7 - j) | (NTHBIT(secondPlane, 7 - j) << 1);
+                const uint16_t paletteEntry = (0x3f00 + (pixel | (atEntry << 2)));
                 screenFrameBuffer[this->scanLine * SCREEN_WIDTH + k] = PALETTE[ReadPaletteRAM(paletteEntry)];
                 k++;
             }
@@ -278,14 +303,12 @@ void PPU::DrawBackgroundOnScanline()
 void PPU::DrawSpriteOnScanline()
 {
     OAMEntry oamMemory[8];
-    uint16_t tileBaseAddr, paletteEntry;
-    uint8_t index, firstPlane, secondPlane, pixel, bit;
 
     if (!PPUMASK.objRenderingEnable)
         return;
 
     // we search for 8 sprites whose y position is equal to the scanline.
-    index = 0;
+    uint8_t index = 0;
     for (int i = 0; i < 64 && index < 8; i++) {
         if (IN_RANGE(this->scanLine, this->OAM[i * 4], this->OAM[i * 4] + 7)) {
             oamMemory[index].yPos = this->OAM[i * 4];
@@ -298,7 +321,8 @@ void PPU::DrawSpriteOnScanline()
 
     // then draw all of them into the scanline
     for (int i = 0; i < index; i++) {
-        tileBaseAddr = PPUCTRL.objPTAddr + oamMemory[i].tileIndex * 16;
+        uint8_t firstPlane, secondPlane;
+        const uint16_t tileBaseAddr = PPUCTRL.objPTAddr + oamMemory[i].tileIndex * 16;
         if (!oamMemory[i].attribute.flipOBJVertically) {
             firstPlane = MemReadNoBuf(tileBaseAddr + (this->scanLine - oamMemory[i].yPos));
             secondPlane = MemReadNoBuf(tileBaseAddr + (this->scanLine - oamMemory[i].yPos) + 8);
@@ -307,9 +331,9 @@ void PPU::DrawSpriteOnScanline()
             secondPlane = MemReadNoBuf(tileBaseAddr + (7 - this->scanLine + oamMemory[i].yPos) + 8);
         }
         for (int j = 0; j < 8; j++) {
-            bit = (oamMemory[i].attribute.flipOBJHorizontally) ? j : 7 - j;
-            pixel = NTHBIT(firstPlane, bit) | (NTHBIT(secondPlane, bit) << 1);
-            paletteEntry = (0x3f00 + (pixel | (oamMemory[i].attribute.palette << 2) | (1U << 4)));
+            const uint8_t bit = (oamMemory[i].attribute.flipOBJHorizontally) ? j : 7 - j;
+            const uint8_t pixel = NTHBIT(firstPlane, bit) | (NTHBIT(secondPlane, bit) << 1);
+            const uint16_t paletteEntry = (0x3f00 + (pixel | (oamMemory[i].attribute.palette << 2) | (1U << 4)));
             if (pixel > 0)
                 screenFrameBuffer[this->scanLine * SCREEN_WIDTH + oamMemory[i].xPos + j] = PALETTE[MemReadNoBuf(paletteEntry)];
         }
@@ -339,8 +363,11 @@ void PPU::Step(int cycle)
         } else if (scanLine == TOTAL_SCANLINE - 1) {
             // vblank ends now
             PPUSTATUS.vblankStarted = false;
+            PPUSTATUS.obj0Hit = false;
         }
         scanLine = (scanLine == TOTAL_SCANLINE - 1) ? 0 : scanLine + 1;
+        if (scanLine == 30)
+            PPUSTATUS.obj0Hit = true;
     }
     oldNMI = NMI;
     NMI = (PPUSTATUS.vblankStarted && PPUCTRL.vblankNMIEnable) ? false : true;
@@ -366,14 +393,15 @@ void PPU::Init(ROM *ROM, int _mirroring)
     nametable = 0;
 }
 
-bool PPU::IsFrameReady() { return frameReady; }
-int PPU::GetScanline() { return scanLine; }
-int PPU::GetTicks() { return tick; }
-bool PPU::PullNMI() { return (oldNMI && !NMI); }
+bool PPU::IsFrameReady() const { return frameReady; }
+int PPU::GetScanline() const { return scanLine; }
+int PPU::GetTicks() const { return tick; }
+bool PPU::PullNMI() const { return (oldNMI && !NMI); }
 void PPU::SetFrameNotReady() { frameReady = false; }
 uint32_t * PPU::GetPTFrameBuffer() { return ptFrameBuffer; }
 uint32_t * PPU::GetScreenFrameBuffer() { return screenFrameBuffer; }
 uint8_t * PPU::GetOAM() { return OAM; }
+uint32_t * PPU::GetOBJFrameBuffer() { return objFrameBuffer; }
 
 
 /* constructor, destructor */

@@ -6,16 +6,19 @@ void UI::Frame(SDL *pSDL)
     ImGui_ImplSDL2_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::Begin("Hello world");
-    ImGui::Text("heeheh");
-    ImGui::End();
-
     ImGui::Begin("pattern table");
-    ImGui::Image((ImTextureID)pSDL->patternTable, ImVec2(PATTERN_TABLE_WIDTH * 2, PATTERN_TABLE_HEIGHT * 2));
+    ImGui::Image(reinterpret_cast<ImTextureID>(pSDL->patternTable),
+                 ImVec2(PATTERN_TABLE_WIDTH * 2, PATTERN_TABLE_HEIGHT * 2));
     ImGui::End();
 
     ImGui::Begin("screen");
-    ImGui::Image((ImTextureID)pSDL->screen, ImVec2(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2));
+    ImGui::Image(reinterpret_cast<ImTextureID>(pSDL->screen),
+                ImVec2(SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2));
+    ImGui::End();
+
+    ImGui::Begin("sprite table");
+    ImGui::Image(reinterpret_cast<ImTextureID>(pSDL->objTable),
+                ImVec2(OBJ_TABLE_WIDTH * 4, OBJ_TABLE_HEIGHT * 4));
     ImGui::End();
 }
 
