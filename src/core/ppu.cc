@@ -95,7 +95,7 @@ uint8_t PPU::RegRead(uint16_t addr)
         genLatch = MemRead(loopyV);
         if (!DuringRendering())
             loopyV += (PPUCTRL.vramIncrement) ? 32 : 1;
-        else
+        else if (DuringRendering())
             UpdateLoopyV();
         break;
     case PPU_REG_OAMDATA:
@@ -127,7 +127,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
         break; 
     case PPU_REG_PPUSCROLL:
         if (!loopyW) {
-            loopyT = (loopyT & 0x7fe0) | static_cast<uint16_t>(val >> 3);
+            loopyT = (loopyT & 0x7fe0) | ((static_cast<uint16_t>(val) & 0xfc) >> 3);
             loopyX = val & 0x07;
             loopyW = 1;
         } else if (loopyW == 1) {
@@ -177,6 +177,36 @@ uint8_t PPU::ReadPaletteRAM(uint16_t addr) const
     return paletteRAM[addr - 0x3f00];
 }
 
+void PPU::UpdateTileMap()
+{
+    for (int i = 0; i < SCREEN_HEIGHT_TILE; i++) {
+        for (int j = 0; j < SCREEN_WIDTH_TILE; j++) {
+            DrawBgTile(0, j, i);
+        }
+    }
+
+    for (int i = 0; i < SCREEN_HEIGHT_TILE; i++) {
+        for (int j = 0; j < SCREEN_WIDTH_TILE; j++) {
+            DrawBgTile(1, j, i);
+        }
+    }
+
+    // bottom left tile map
+    for (int i = 0; i < SCREEN_HEIGHT_TILE; i++) {
+        for (int j = 0; j < SCREEN_WIDTH_TILE; j++) {
+            DrawBgTile(2, j, i);
+        }
+    }
+
+    // bottom right tile map
+    for (int i = 0; i < SCREEN_HEIGHT_TILE; i++) {
+        for (int j = 0; j < SCREEN_WIDTH_TILE; j++) {
+            DrawBgTile(3, j, i);
+        }
+    }
+
+}
+
 void PPU::UpdatePatternTable()
 {
     uint16_t tileAddr = 0;
@@ -213,6 +243,40 @@ void PPU::UpdatePatternTable()
     }
 }
 
+
+void PPU::DrawBgTile(uint16_t base, uint8_t x, uint8_t y)
+{
+    uint8_t tileIndex, attribute, firstPlane, secondPlane, pixel;
+    uint16_t baseAddr = 0x2000 + 0x0400 * base, frameXOffset, frameYOffset, ptBaseAddr = 0x1000 * PPUCTRL.bgPTAddr;
+
+    tileIndex = MemReadNoBuf(baseAddr + y * SCREEN_WIDTH_TILE + x);
+    attribute = GetAttributeTableEntry(base, x, y);
+
+    if (base == 0) {
+        frameXOffset = 0;
+        frameYOffset = 0;
+    } else if (base == 1) {
+        frameXOffset = SCREEN_WIDTH;
+        frameYOffset = 0;
+    } else if (base == 2) {
+        frameXOffset = 0;
+        frameYOffset = SCREEN_HEIGHT;
+    } else if (base == 3) {
+        frameXOffset = SCREEN_WIDTH;
+        frameYOffset = SCREEN_HEIGHT;
+    }
+
+    attribute = (attribute >> (((y % 4) / 2 * 2 + (x % 4) / 2) * 2)) & 0x03;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            firstPlane = MemReadNoBuf(ptBaseAddr + tileIndex * 16 + i); 
+            secondPlane = MemReadNoBuf(ptBaseAddr + tileIndex * 16 + i + 8); 
+            pixel = NTHBIT(firstPlane, 7 - j) | (NTHBIT(secondPlane, 7 - j) << 1);
+            tileMapFrameBuffer[(frameYOffset + y * 8 + i) * SCREEN_WIDTH * 2 + frameXOffset + x * 8 + j] = PALETTE[ReadPaletteRAM(0x3f00 + (pixel | (attribute << 2)))];
+        }
+    }
+}
+
 void PPU::UpdateObjTable()
 {
     for (int i = 0; i < 8; i++) {
@@ -239,6 +303,7 @@ void PPU::UpdateObjTable()
 
 void PPU::UpdateTables()
 {
+    UpdateTileMap();
     UpdatePatternTable();
     UpdateObjTable();
 }
@@ -308,12 +373,12 @@ void PPU::GetTileData(int sL = -1)
 
 void PPU::UpdateLoopyV()
 {
-        // increment Y
+    // increment Y
     if ((loopyV & 0x7000) != 0x7000) {
          loopyV += 0x1000;
     } else {
         loopyV &= ~0x7000;
-        int y = (loopyV & 0x03e0) >> 5;
+        uint16_t y = (loopyV & 0x03e0) >> 5;
         if (y == 29) {
             y = 0;
             loopyV ^= 0x0800;
@@ -341,6 +406,7 @@ bool PPU::RenderEnable() const
 bool PPU::DuringRendering() const
 {
     return (RenderEnable() && ((scanLine == TOTAL_SCANLINE - 1) || (IN_RANGE(scanLine, 0, 239))));
+    // return (((scanLine == TOTAL_SCANLINE - 1) || (IN_RANGE(scanLine, 0, 239))));
 }
 
 void PPU::Step(int cycle)
@@ -433,6 +499,7 @@ int PPU::GetTicks() const { return tick; }
 bool PPU::PullNMI() const { return (oldNMI && !NMI); }
 void PPU::SetFrameNotReady() { frameReady = false; }
 uint32_t * PPU::GetPTFrameBuffer() { return ptFrameBuffer; }
+uint32_t * PPU::GetTileMapFrameBuffer() { return tileMapFrameBuffer; }
 uint32_t * PPU::GetScreenFrameBuffer() { return screenFrameBuffer; }
 uint8_t * PPU::GetOAM() { return OAM; }
 uint32_t * PPU::GetOBJFrameBuffer() { return objFrameBuffer; }

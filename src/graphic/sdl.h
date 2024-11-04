@@ -11,9 +11,10 @@ struct SDL {
     SDL_Texture *patternTable = nullptr;
     SDL_Texture *screen = nullptr;
     SDL_Texture *objTable = nullptr;
+    SDL_Texture *tileMap = nullptr;
 
     /* methods */
-    void UpdateTexture(uint32_t *, uint32_t *, uint32_t *);
+    void UpdateTexture(uint32_t *, uint32_t *, uint32_t *, uint32_t *);
     /* constructor, destructor */
     SDL();
     ~SDL();

@@ -25,9 +25,9 @@ void Graphic::GetInput(bool *quit, bool *key)
     key[BTN_RIGHT] = keyState[SDL_SCANCODE_RIGHT];
 }
 
-void Graphic::Draw(uint32_t *screenFrameBuffer, uint32_t *ptFrameBuffer, uint32_t *objFrameBuffer)
+void Graphic::Draw(uint32_t *screenFrameBuffer, uint32_t *ptFrameBuffer, uint32_t *objFrameBuffer, uint32_t *tileMapBuffer)
 {
-    sdl.UpdateTexture(screenFrameBuffer, ptFrameBuffer, objFrameBuffer);
+    sdl.UpdateTexture(screenFrameBuffer, ptFrameBuffer, objFrameBuffer, tileMapBuffer);
     ui.Frame(&sdl);
     ui.Render(sdl.renderer);
 }

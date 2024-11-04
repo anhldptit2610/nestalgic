@@ -69,6 +69,7 @@ private:
     uint32_t ptFrameBuffer[PATTERN_TABLE_HEIGHT * PATTERN_TABLE_WIDTH];
     uint32_t objFrameBuffer[OBJ_TABLE_HEIGHT * OBJ_TABLE_WIDTH];
     uint32_t screenFrameBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
+    uint32_t tileMapFrameBuffer[TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
 
     union {
         uint8_t raw;
@@ -143,11 +144,13 @@ private:
     uint8_t ReadPaletteRAM(uint16_t) const;
     void UpdatePatternTable();
     void UpdateObjTable();
+    void UpdateTileMap();
     uint8_t MemReadNoBuf(uint16_t) const;
     uint8_t GetAttributeTableEntry(unsigned, int, int) const;
     void UpdateLoopyV();
     bool RenderEnable() const;
     bool DuringRendering() const;
+    void DrawBgTile(uint16_t, uint8_t, uint8_t);
 
 public:
     /* getter/setter */
@@ -158,6 +161,7 @@ public:
     uint32_t *GetScreenFrameBuffer();
     uint8_t * GetOAM();
     uint32_t *GetOBJFrameBuffer();
+    uint32_t *GetTileMapFrameBuffer();
     void GetTileData(int);
 
     void SetFrameNotReady();

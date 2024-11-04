@@ -10,7 +10,7 @@ private:
     UI ui;
 public:
     void GetInput(bool *, bool *);
-    void Draw(uint32_t *, uint32_t *, uint32_t *);
+    void Draw(uint32_t *, uint32_t *, uint32_t *, uint32_t *);
     /* constructor, destructor */
     Graphic();
     ~Graphic();
