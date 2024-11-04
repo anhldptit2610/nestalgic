@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/cpu_test.dir/main.cc.o CMakeFiles/cpu_test.dir/cpu_test.cc.o -o ../../bin/cpu_test  ../core/libnestalgic_core.a ../../_deps/yyjson-build/libyyjson.a ../graphic/libgraphic.a -lSDL2 ../../thirdparty/libimgui.a 

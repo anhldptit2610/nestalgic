@@ -23,7 +23,7 @@ SDL::SDL()
     if (!window) {
         SDL_Log("Error: SDL_CreateWindow() - %s\n", SDL_GetError());
     }
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         SDL_Log("Error: SDL_CreateRenderer() - %s\n", SDL_GetError());
     }

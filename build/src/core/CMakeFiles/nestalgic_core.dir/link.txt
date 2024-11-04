@@ -1,0 +1,2 @@
+/usr/bin/ar qc libnestalgic_core.a CMakeFiles/nestalgic_core.dir/cpu/cpu.cc.o CMakeFiles/nestalgic_core.dir/cpu/opcode_list.cc.o CMakeFiles/nestalgic_core.dir/cpu/opcode.cc.o CMakeFiles/nestalgic_core.dir/mapper/mapper0.cc.o CMakeFiles/nestalgic_core.dir/nestalgic.cc.o CMakeFiles/nestalgic_core.dir/mmu.cc.o CMakeFiles/nestalgic_core.dir/rom.cc.o CMakeFiles/nestalgic_core.dir/ppu.cc.o CMakeFiles/nestalgic_core.dir/logging.cc.o CMakeFiles/nestalgic_core.dir/controller.cc.o
+/usr/bin/ranlib libnestalgic_core.a

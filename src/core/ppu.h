@@ -16,6 +16,29 @@
 
 #define OAM_SIZE                            256
 
+typedef enum {
+    DFS_GET_NAMETABLE_BYTE,
+    DFS_GET_ATTRIBUTE_BYTE,
+    DFS_GET_PT_TILE_LOW,
+    DFS_GET_PT_TILE_HIGH,
+} EDataFetchStep;
+
+typedef struct Pos {
+    uint8_t raw;
+    uint8_t Coarse() const { return raw / 8; }
+    uint8_t Fine() const { return raw % 8; }
+    uint8_t Add8() const { return raw + 8; }
+    uint8_t NextCoarse() const { return (raw + 8) / 8; }
+    Pos& operator=(const uint8_t r) {
+        this->raw = r;
+        return *this;
+    }
+    void operator++() {
+        this->raw = (this->raw + 1) % SCREEN_WIDTH;
+    }
+} Pos;
+
+
 typedef struct {
     uint8_t yPos;
     uint8_t tileIndex;
@@ -48,7 +71,6 @@ private:
     uint32_t screenFrameBuffer[SCREEN_HEIGHT * SCREEN_WIDTH];
 
     union {
-        /* Read/Write */
         uint8_t raw;
         struct {
             uint8_t baseNTAddr : 2;
@@ -59,14 +81,9 @@ private:
             uint8_t ppuMasterSelect : 1;
             uint8_t vblankNMIEnable : 1;
         };
-    } PPUCTRL;
-    uint16_t baseNTAddr;
-    uint8_t vramIncrement;
-    uint16_t objPTAddr;
-    uint16_t bgPTAddr;
-    uint8_t objHeight;
-    bool vblankNMIEnable;
-    union PPUMASK {         /* Read/Write */
+    } PPUCTRL;              /* Read/Write */
+
+    union {
         uint8_t raw;
         struct {
             uint8_t greyScaleEnable : 1;
@@ -78,8 +95,9 @@ private:
             uint8_t emphasizeGreen : 1;
             uint8_t emphasizeBlue : 1;
         };
-    } PPUMASK;
-    union PPUSTATUS {       /* Read */
+    } PPUMASK;              /* Read/Write */
+
+    union {
         uint8_t raw;
         struct {
             uint8_t unused : 5;
@@ -87,29 +105,33 @@ private:
             uint8_t obj0Hit : 1;
             uint8_t vblankStarted : 1;
         };
-    } PPUSTATUS;
-    uint16_t VRAMADDR : 15;
+    } PPUSTATUS;            /* Read */
 
     EMirroring mirrorring;
 
     /* internal registers a.k.a loopy */
-    uint16_t v : 15;
-    uint16_t t : 15;
-    uint8_t x : 3;
-    uint8_t w : 1;
+    uint16_t loopyV : 15;           /* current VRAM address (15 bits) */
+    uint16_t loopyT : 15;           /* temporary VRAM address (15 bits) */
+    uint8_t loopyX : 3;             /* fine X scroll (3 bits) */
+    uint8_t loopyW : 1;             /* first or second write toggle (1 bit) */
 
     int tick;
     int scanLine;
     bool frameReady;
 
+    /* rendering internal */
+    Pos xPos;
+    int currentXPos;
+    uint8_t nextPTDataLow;
+    uint8_t nextPTDataHigh;
+    uint8_t nextAttribute;
+    uint8_t currentPTDataLow;
+    uint8_t currentPTDataHigh;
+    uint8_t currentAttribute;
+
     /* NMI */
     bool oldNMI;
     bool NMI;
-
-    /* scrolling */
-    uint8_t yScroll = 0;
-    uint8_t xScroll = 0;
-    uint8_t nametable;
 
     /* OAM */
     uint8_t OAM[OAM_SIZE];
@@ -121,14 +143,12 @@ private:
     uint8_t ReadPaletteRAM(uint16_t) const;
     void UpdatePatternTable();
     void UpdateObjTable();
-    void DrawBackgroundOnScanline();
-    void DrawSpriteOnScanline();
-    void DrawScanline();
     uint8_t MemReadNoBuf(uint16_t) const;
     uint8_t GetAttributeTableEntry(unsigned, int, int) const;
+    void UpdateLoopyV();
+    bool RenderEnable() const;
+    bool DuringRendering() const;
 
-    // TODO: scrolling
-    // TODO: oamdma
 public:
     /* getter/setter */
     int GetScanline() const;
@@ -138,6 +158,7 @@ public:
     uint32_t *GetScreenFrameBuffer();
     uint8_t * GetOAM();
     uint32_t *GetOBJFrameBuffer();
+    void GetTileData(int);
 
     void SetFrameNotReady();
     void UpdateTables();

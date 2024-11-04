@@ -1,7 +1,5 @@
 #include "mmu.h"
 
-#include <pstl/unseq_backend_simd.h>
-
 void MMU::Init(PPU *_ppu, ROM *_rom, Controller *_controller)
 {
     pPPU = _ppu;

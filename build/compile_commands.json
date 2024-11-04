@@ -1,0 +1,158 @@
+[
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/_deps/yyjson-build",
+  "command": "/usr/bin/cc  -I/home/anhld/Projects/nestalgic/build/_deps/yyjson-src/src -g -o CMakeFiles/yyjson.dir/src/yyjson.c.o -c /home/anhld/Projects/nestalgic/build/_deps/yyjson-src/src/yyjson.c",
+  "file": "/home/anhld/Projects/nestalgic/build/_deps/yyjson-src/src/yyjson.c",
+  "output": "_deps/yyjson-build/CMakeFiles/yyjson.dir/src/yyjson.c.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/thirdparty",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -o CMakeFiles/imgui.dir/imgui/backends/imgui_impl_sdl2.cpp.o -c /home/anhld/Projects/nestalgic/thirdparty/imgui/backends/imgui_impl_sdl2.cpp",
+  "file": "/home/anhld/Projects/nestalgic/thirdparty/imgui/backends/imgui_impl_sdl2.cpp",
+  "output": "thirdparty/CMakeFiles/imgui.dir/imgui/backends/imgui_impl_sdl2.cpp.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/thirdparty",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -o CMakeFiles/imgui.dir/imgui/backends/imgui_impl_sdlrenderer2.cpp.o -c /home/anhld/Projects/nestalgic/thirdparty/imgui/backends/imgui_impl_sdlrenderer2.cpp",
+  "file": "/home/anhld/Projects/nestalgic/thirdparty/imgui/backends/imgui_impl_sdlrenderer2.cpp",
+  "output": "thirdparty/CMakeFiles/imgui.dir/imgui/backends/imgui_impl_sdlrenderer2.cpp.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/thirdparty",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -o CMakeFiles/imgui.dir/imgui/imgui.cpp.o -c /home/anhld/Projects/nestalgic/thirdparty/imgui/imgui.cpp",
+  "file": "/home/anhld/Projects/nestalgic/thirdparty/imgui/imgui.cpp",
+  "output": "thirdparty/CMakeFiles/imgui.dir/imgui/imgui.cpp.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/thirdparty",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -o CMakeFiles/imgui.dir/imgui/imgui_demo.cpp.o -c /home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_demo.cpp",
+  "file": "/home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_demo.cpp",
+  "output": "thirdparty/CMakeFiles/imgui.dir/imgui/imgui_demo.cpp.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/thirdparty",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -o CMakeFiles/imgui.dir/imgui/imgui_draw.cpp.o -c /home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_draw.cpp",
+  "file": "/home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_draw.cpp",
+  "output": "thirdparty/CMakeFiles/imgui.dir/imgui/imgui_draw.cpp.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/thirdparty",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -o CMakeFiles/imgui.dir/imgui/imgui_tables.cpp.o -c /home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_tables.cpp",
+  "file": "/home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_tables.cpp",
+  "output": "thirdparty/CMakeFiles/imgui.dir/imgui/imgui_tables.cpp.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/thirdparty",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -o CMakeFiles/imgui.dir/imgui/imgui_widgets.cpp.o -c /home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_widgets.cpp",
+  "file": "/home/anhld/Projects/nestalgic/thirdparty/imgui/imgui_widgets.cpp",
+  "output": "thirdparty/CMakeFiles/imgui.dir/imgui/imgui_widgets.cpp.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -g -Wall -o CMakeFiles/nestalgic.dir/main.cc.o -c /home/anhld/Projects/nestalgic/src/main.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/main.cc",
+  "output": "src/CMakeFiles/nestalgic.dir/main.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/cpu/cpu.cc.o -c /home/anhld/Projects/nestalgic/src/core/cpu/cpu.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/cpu/cpu.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/cpu/cpu.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/cpu/opcode_list.cc.o -c /home/anhld/Projects/nestalgic/src/core/cpu/opcode_list.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/cpu/opcode_list.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/cpu/opcode_list.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/cpu/opcode.cc.o -c /home/anhld/Projects/nestalgic/src/core/cpu/opcode.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/cpu/opcode.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/cpu/opcode.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/mapper/mapper0.cc.o -c /home/anhld/Projects/nestalgic/src/core/mapper/mapper0.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/mapper/mapper0.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/mapper/mapper0.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/nestalgic.cc.o -c /home/anhld/Projects/nestalgic/src/core/nestalgic.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/nestalgic.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/nestalgic.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/mmu.cc.o -c /home/anhld/Projects/nestalgic/src/core/mmu.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/mmu.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/mmu.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/rom.cc.o -c /home/anhld/Projects/nestalgic/src/core/rom.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/rom.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/rom.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/ppu.cc.o -c /home/anhld/Projects/nestalgic/src/core/ppu.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/ppu.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/ppu.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/logging.cc.o -c /home/anhld/Projects/nestalgic/src/core/logging.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/logging.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/logging.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/core",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/nestalgic_core.dir/controller.cc.o -c /home/anhld/Projects/nestalgic/src/core/controller.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/core/controller.cc",
+  "output": "src/core/CMakeFiles/nestalgic_core.dir/controller.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/graphic",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/graphic.dir/graphic.cc.o -c /home/anhld/Projects/nestalgic/src/graphic/graphic.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/graphic/graphic.cc",
+  "output": "src/graphic/CMakeFiles/graphic.dir/graphic.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/graphic",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/graphic.dir/sdl.cc.o -c /home/anhld/Projects/nestalgic/src/graphic/sdl.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/graphic/sdl.cc",
+  "output": "src/graphic/CMakeFiles/graphic.dir/sdl.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/graphic",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/thirdparty/imgui -I/home/anhld/Projects/nestalgic/src/core -g -Wall -o CMakeFiles/graphic.dir/ui.cc.o -c /home/anhld/Projects/nestalgic/src/graphic/ui.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/graphic/ui.cc",
+  "output": "src/graphic/CMakeFiles/graphic.dir/ui.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/testing",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/build/_deps/yyjson-src/src -g -Wall -o CMakeFiles/cpu_test.dir/main.cc.o -c /home/anhld/Projects/nestalgic/src/testing/main.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/testing/main.cc",
+  "output": "src/testing/CMakeFiles/cpu_test.dir/main.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/testing",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/build/_deps/yyjson-src/src -g -Wall -o CMakeFiles/cpu_test.dir/cpu_test.cc.o -c /home/anhld/Projects/nestalgic/src/testing/cpu_test.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/testing/cpu_test.cc",
+  "output": "src/testing/CMakeFiles/cpu_test.dir/cpu_test.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/src/testing",
+  "command": "/usr/bin/c++  -I/home/anhld/Projects/nestalgic/src/core -I/home/anhld/Projects/nestalgic/src/core/include -I/home/anhld/Projects/nestalgic/src/graphic -I/home/anhld/Projects/nestalgic/thirdparty/imgui -g -Wall -O3 -o CMakeFiles/nestest_cmp.dir/nestest_cmp.cc.o -c /home/anhld/Projects/nestalgic/src/testing/nestest_cmp.cc",
+  "file": "/home/anhld/Projects/nestalgic/src/testing/nestest_cmp.cc",
+  "output": "src/testing/CMakeFiles/nestest_cmp.dir/nestest_cmp.cc.o"
+},
+{
+  "directory": "/home/anhld/Projects/nestalgic/build/utils",
+  "command": "/usr/bin/cc   -g -Wall -o CMakeFiles/nestest_log_parser.dir/nestest_log_parser.c.o -c /home/anhld/Projects/nestalgic/utils/nestest_log_parser.c",
+  "file": "/home/anhld/Projects/nestalgic/utils/nestest_log_parser.c",
+  "output": "utils/CMakeFiles/nestest_log_parser.dir/nestest_log_parser.c.o"
+}
+]

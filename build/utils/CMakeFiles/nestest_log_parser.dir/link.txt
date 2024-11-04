@@ -1,0 +1,1 @@
+/usr/bin/cc -g CMakeFiles/nestest_log_parser.dir/nestest_log_parser.c.o -o ../bin/nestest_log_parser 

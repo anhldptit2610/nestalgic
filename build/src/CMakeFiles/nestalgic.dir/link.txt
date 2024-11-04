@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/nestalgic.dir/main.cc.o -o ../bin/nestalgic  core/libnestalgic_core.a ../thirdparty/libimgui.a -lSDL2 graphic/libgraphic.a ../thirdparty/libimgui.a -lSDL2 

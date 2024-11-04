@@ -51,6 +51,7 @@
         "mmu.h": "c",
         "cpu.h": "c",
         "common.h": "c",
-        "ppu.h": "c"
+        "ppu.h": "c",
+        "rom.h": "c"
     }
 }

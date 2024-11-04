@@ -1,0 +1,1 @@
+/usr/bin/c++ -g CMakeFiles/nestest_cmp.dir/nestest_cmp.cc.o -o ../../bin/nestest_cmp  ../core/libnestalgic_core.a ../../thirdparty/libimgui.a -lSDL2 ../graphic/libgraphic.a ../../thirdparty/libimgui.a -lSDL2 
