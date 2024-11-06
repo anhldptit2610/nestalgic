@@ -2,6 +2,7 @@
 #include <cstring>
 
 #define TOTAL_SCANLINE          262
+#define PRE_RENDER_SCANLINE     TOTAL_SCANLINE - 1
 
 //	NES color palette. Taken from emudeloopyV.de
 uint32_t PALETTE[64] = {
@@ -35,7 +36,7 @@ uint16_t PPU::NametableUnmirror(uint16_t addr) const
     return 0;
 }
 
-uint8_t PPU::GetAttributeTableEntry(unsigned nametable, int x, int y) const
+uint8_t PPU::GetAttributeTableEntry(unsigned nametable, unsigned x, unsigned y) const
 {
     uint16_t atBaseAddr = 0x23c0 + 0x0400 * nametable;
     x /= 4;
@@ -92,9 +93,9 @@ uint8_t PPU::RegRead(uint16_t addr)
         PPUSTATUS.vblankStarted = 0;
         break;
     case PPU_REG_PPUDATA:
-        genLatch = MemRead(loopyV);
+        genLatch = MemRead(loopyV.raw);
         if (!DuringRendering())
-            loopyV += (PPUCTRL.vramIncrement) ? 32 : 1;
+            loopyV.raw += (PPUCTRL.vramIncrement) ? 32 : 1;
         else if (DuringRendering())
             UpdateLoopyV();
         break;
@@ -113,7 +114,7 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
     case PPU_REG_PPUCTRL:
         /* t: ...GH.. ........ <- d: ......GH */
         /*    <used elsewhere> <- d: ABCDEF.. */
-        loopyT = (loopyT & 0x73ff) | ((static_cast<uint16_t>(val) & 0x03) << 10);
+        loopyT.raw = (loopyT.raw & 0x73ff) | ((static_cast<uint16_t>(val) & 0x03) << 10);
         PPUCTRL.raw = val;
         break;
     case PPU_REG_PPUMASK:
@@ -127,31 +128,31 @@ void PPU::RegWrite(uint16_t addr, uint8_t val)
         break; 
     case PPU_REG_PPUSCROLL:
         if (!loopyW) {
-            loopyT = (loopyT & 0x7fe0) | ((static_cast<uint16_t>(val) & 0xfc) >> 3);
+            loopyT.raw = (loopyT.raw & 0x7fe0) | ((static_cast<uint16_t>(val) & 0xfc) >> 3);
             loopyX = val & 0x07;
             loopyW = 1;
         } else if (loopyW == 1) {
-            loopyT = (loopyT & 0x0c1f) | ((static_cast<uint16_t>(val) & 0x07) << 12) | ((static_cast<uint16_t>(val) >> 3) << 5);
+            loopyT.raw = (loopyT.raw & 0x0c1f) | ((static_cast<uint16_t>(val) & 0x07) << 12) | ((static_cast<uint16_t>(val) >> 3) << 5);
             loopyW = 0;
         }
         break;
     case PPU_REG_PPUADDR:
         if (!loopyW) {
-            loopyT = (loopyT & 0x40ff) | (static_cast<uint16_t>(val & 0x3f) << 8);
-            loopyT = loopyT & ~(1U << 14);
+            loopyT.raw = (loopyT.raw & 0x40ff) | (static_cast<uint16_t>(val & 0x3f) << 8);
+            loopyT.raw = loopyT.raw & ~(1U << 14);
             loopyW = 1;
         } else if (loopyW == 1) {
-            loopyT = (loopyT & 0x7f00) | (static_cast<uint16_t>(val) & 0x00ff);
+            loopyT.raw = (loopyT.raw & 0x7f00) | (static_cast<uint16_t>(val) & 0x00ff);
             loopyV = loopyT;
             loopyW = 0;
         }
         break;
     case PPU_REG_PPUDATA:
-        MemWrite(loopyV, val);
+        MemWrite(loopyV.raw, val);
         // if (scanLine <= 239)
             // printf("ppudata - tick: %d scanline: %d\n", tick, scanLine);
         if (!DuringRendering())
-            loopyV += (PPUCTRL.vramIncrement) ? 32 : 1;
+            loopyV.raw += (PPUCTRL.vramIncrement) ? 32 : 1;
         else
             UpdateLoopyV();
         break;
@@ -204,7 +205,6 @@ void PPU::UpdateTileMap()
             DrawBgTile(3, j, i);
         }
     }
-
 }
 
 void PPU::UpdatePatternTable()
@@ -308,161 +308,145 @@ void PPU::UpdateTables()
     UpdateObjTable();
 }
 
-void PPU::GetTileData(int sL = -1)
+void PPU::ProcessPixel(int sL = -1)
 {
-    static unsigned step = 0;
-    static uint8_t ntEntry, xOffset;
-    int scanLine = (sL == -1) ? this->scanLine : sL;
-    static uint8_t attribute, ptDataLow, ptDataHigh;
+    auto GetPaletteNumber = [this](uint8_t& attribute) -> void {
+        attribute =  (attribute >> (((this->loopyV.coarseY % 4) / 2 * 2 + (this->loopyV.coarseX % 4) / 2) * 2)) & 0x03;
+    };
 
-    switch (step) {
-    case 0: // fetch nametable byte
+    static unsigned step = 0;
+    static uint8_t ntEntry;
+    static RenderData renderData;
+    int scanLine = (sL == -1) ? this->scanLine : sL;
+
+    switch ((tick - 1) % 8) {
+    case 0:
+        // the shifters are reloaded during ticks 9, 17, 25, ..., 257.
+        currentRenderData = nextRenderData;
+        nextRenderData = renderData;
         break;
     case 1:
-        ntEntry = MemReadNoBuf(0x2000 | (loopyV & 0x0fff));
-        // we set the x offset at first, then increment it later
-        xOffset = loopyX;
+        ntEntry = MemReadNoBuf(0x2000 | (loopyV.raw & 0x0fff));
         break;
     case 2: // fetch attribute table byte
         break;
     case 3:
-        attribute = MemReadNoBuf(0x23c0 | (loopyV & 0x0c00) | ((loopyV >> 4) & 0x38) | ((loopyV >> 2) & 0x07));
+        renderData.attribute = MemReadNoBuf(
+            0x23c0 | (loopyV.raw & 0x0c00) | ((loopyV.raw >> 4) & 0x38) | ((loopyV.raw >> 2) & 0x07));
+        GetPaletteNumber(renderData.attribute);
         break;
     case 4: // get pattern table tile low
         break;
     case 5:
-        ptDataLow = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + (scanLine % 8));
+        renderData.ptLow = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + (scanLine % 8));
         break;
     case 6: // get pattern table tile high
         break;
     case 7:
-        ptDataHigh = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + (scanLine % 8) + 8);
-        // every 8 cycle, fed all data into the appropriate shift registers
-        currentAttribute = nextAttribute;
-        currentPTDataLow = nextPTDataLow;
-        currentPTDataHigh = nextPTDataHigh;
-        nextAttribute = attribute;
-        nextPTDataLow = ptDataLow;
-        nextPTDataHigh = ptDataHigh;
-
+        renderData.ptHigh = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + (scanLine % 8) + 8);
         // update coarse X
-        if (RenderEnable()) {
-            if ((loopyV & 0x001f) == 31) {
-                loopyV &= ~0x001f;
-                loopyV ^= 0x0400;
-            } else {
-                loopyV += 1;
-                // printf("loopyV: %04x\n", loopyV);
-            }
-        }
+        if (IsRenderEnable())
+            IncrementX();
         break;
     default:
         break;
     }
 
+    // TODO: seperate this from above code
     if (IN_RANGE(tick, 1, 256) && IN_RANGE(this->scanLine, 0, SCREEN_HEIGHT - 1)) {
-            // produce pixel
-            const uint8_t pixel = NTHBIT(currentPTDataLow, 7 - step) | (NTHBIT(currentPTDataHigh, 7 - step) << 1);
-            const uint16_t paletteEntry = (0x3f00 + pixel);
+            const uint8_t pixel = NTHBIT(currentRenderData.ptLow, 7 - step) | (NTHBIT(currentRenderData.ptHigh, 7 - step) << 1);
+            const uint16_t paletteEntry = (0x3f00 | pixel | (currentRenderData.attribute << 2));
             screenFrameBuffer[this->scanLine * SCREEN_WIDTH + currentXPos] = PALETTE[ReadPaletteRAM(paletteEntry)];
-            currentXPos++;
+            currentXPos = (currentXPos == SCREEN_WIDTH - 1) ? 0 : currentXPos + 1;
     }
 
-    step = (step == 7) ? 0 : step + 1;
+    step = (step + 1) % 8;
 }
 
 void PPU::UpdateLoopyV()
 {
-    // increment Y
-    if ((loopyV & 0x7000) != 0x7000) {
-         loopyV += 0x1000;
+    IncrementY();
+    IncrementX();
+}
+
+void PPU::IncrementX()
+{
+    if ((loopyV.raw & 0x001f) == 31) {
+        loopyV.raw &= ~0x001f;
+        loopyV.raw ^= 0x0400;
     } else {
-        loopyV &= ~0x7000;
-        uint16_t y = (loopyV & 0x03e0) >> 5;
+        loopyV.raw += 1;
+    }
+}
+
+void PPU::IncrementY()
+{
+    if ((loopyV.raw & 0x7000) != 0x7000) {
+        loopyV.raw += 0x1000;
+    } else {
+        loopyV.raw &= ~0x7000;
+        int y = (loopyV.raw & 0x03e0) >> 5;
         if (y == 29) {
             y = 0;
-            loopyV ^= 0x0800;
+            loopyV.raw ^= 0x0800;
         } else if (y == 31) {
             y = 0;
         } else {
             y++;
         }
-        loopyV = (loopyV & ~0x03e0) | (y << 5);
-    }
-    // increment coarse X
-    if ((loopyV & 0x001f) == 31) {
-        loopyV &= ~0x001f;
-        loopyV ^= 0x0400;
-    } else {
-        loopyV += 1;
+        loopyV.raw = (loopyV.raw & ~0x03e0) | (y << 5);
     }
 }
 
-bool PPU::RenderEnable() const
+bool PPU::IsRenderEnable() const
 {
     return PPUMASK.bgRenderingEnable || PPUMASK.objRenderingEnable;
 }
 
 bool PPU::DuringRendering() const
 {
-    return (RenderEnable() && ((scanLine == TOTAL_SCANLINE - 1) || (IN_RANGE(scanLine, 0, 239))));
-    // return (((scanLine == TOTAL_SCANLINE - 1) || (IN_RANGE(scanLine, 0, 239))));
+    return (IsRenderEnable() && ((scanLine == PRE_RENDER_SCANLINE) || (IN_RANGE(scanLine, 0, 239))));
 }
 
-void PPU::Step(int cycle)
+void PPU::Step(int cpuCycle)
 {
-    for (int i = 0; i < cycle * 3; i++) {
-        if (IN_RANGE(tick, 1, 256)) {
-            GetTileData();
-            if (tick == 256 && RenderEnable()) {  // increment fine Y
-                if ((loopyV & 0x7000) != 0x7000) {
-                    loopyV += 0x1000;
-                } else {
-                    loopyV &= ~0x7000;
-                    int y = (loopyV & 0x03e0) >> 5;
-                    if (y == 29) {
-                        y = 0;
-                        loopyV ^= 0x0800;
-                    } else if (y == 31) {
-                        y = 0;
-                    } else {
-                        y++;
-                    }
-                    loopyV = (loopyV & ~0x03e0) | (y << 5);
+    for (int i = 0; i < cpuCycle * 3; i++) {
+        if (IN_RANGE(this->scanLine, 0, 239) || this->scanLine == PRE_RENDER_SCANLINE) {
+            if (tick == 0) {
+
+            } else if (IN_RANGE(tick, 1, 256)) {
+                ProcessPixel();
+                if (tick == 256 && IsRenderEnable()) {
+                    IncrementY();
                 }
+            } else if (IN_RANGE(tick, 257, 320)) {
+                if (IsRenderEnable() && tick == 257) {
+                    loopyV.raw = (loopyV.raw & ~0x841f) | (loopyT.raw & 0x041f);
+                } else if (IsRenderEnable() && IN_RANGE(tick, 280, 304) && scanLine == PRE_RENDER_SCANLINE) {
+                    loopyV.raw = (loopyV.raw & ~0xfbe0) | (loopyT.raw & 0x7be0);
+                }
+            } else if (IN_RANGE(tick, 321, 336)) {
+                ProcessPixel((scanLine == PRE_RENDER_SCANLINE) ? 0 : scanLine + 1);
+            } else if (IN_RANGE(tick, 337, 340)) {
+
             }
-        } else if (IN_RANGE(tick, 257, 320)) {
-            if (RenderEnable() && tick == 257) {
-                loopyV = (loopyV & ~0x041f) | (loopyT & 0x041f);
-            } else if (RenderEnable() && IN_RANGE(tick, 280, 304) && scanLine == TOTAL_SCANLINE - 1) {
-                loopyV = (loopyV & ~0x7be0) | (loopyT & 0x7be0);
-            }
-        } else if (IN_RANGE(tick, 321, 336)) {
-            GetTileData((scanLine == TOTAL_SCANLINE - 1) ? 0 : scanLine + 1);
-            // if (RenderEnable() && (tick == 328 || tick == 336)) {
-            //     // increment coarse X
-            //     if ((loopyV & 0x001f) == 31) {
-            //         loopyV &= ~0x001f;
-            //         loopyV ^= 0x0400;
-            //     } else {
-            //         loopyV += 1;
-            //     }
-            // }
-        } else if (IN_RANGE(tick, 337, 340)) {
+        } else if (this->scanLine == 240) {     // idle this scanline
+
+        } else if (this->scanLine > 240) {
 
         }
+
         if (tick == 340) {
             tick = 0;
             currentXPos = 0;
             if (scanLine == SCREEN_HEIGHT - 1) {
                 frameReady = true;
-                // and vblank starts
-                PPUSTATUS.vblankStarted = true;
-            } else if (scanLine == TOTAL_SCANLINE - 1) {
-                // vblank ends now
+            } else if (scanLine == SCREEN_HEIGHT) {
+                PPUSTATUS.vblankStarted = true;         // TODO: correct vblank start and end timing
+            } else if (scanLine == PRE_RENDER_SCANLINE) {
                 PPUSTATUS.vblankStarted = false;
             }
-            scanLine = (scanLine == TOTAL_SCANLINE - 1) ? 0 : scanLine + 1;
+            scanLine = (scanLine == PRE_RENDER_SCANLINE) ? 0 : scanLine + 1;
         } else {
             tick++;
         }
@@ -480,10 +464,11 @@ void PPU::Init(ROM *ROM, int _mirroring)
     tick = 0;
 #endif
     /* loopy registers init */
-    loopyW = loopyT = loopyV = loopyX = 0;
+    loopyW = loopyX = 0;
+    loopyT.raw = 0;
+    loopyV.raw = 0;
 
     scanLine = 0;
-    xPos = 0;
     genLatch = 0;
     frameReady = false;
     memset(ptFrameBuffer, 0, sizeof(ptFrameBuffer));

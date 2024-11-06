@@ -23,21 +23,30 @@ typedef enum {
     DFS_GET_PT_TILE_HIGH,
 } EDataFetchStep;
 
-typedef struct Pos {
-    uint8_t raw;
-    uint8_t Coarse() const { return raw / 8; }
-    uint8_t Fine() const { return raw % 8; }
-    uint8_t Add8() const { return raw + 8; }
-    uint8_t NextCoarse() const { return (raw + 8) / 8; }
-    Pos& operator=(const uint8_t r) {
-        this->raw = r;
+typedef struct RenderData {
+    uint8_t ptLow;
+    uint8_t ptHigh;
+    uint8_t attribute;
+    RenderData& operator=(const RenderData& obj) {
+        if (this == &obj)
+            return *this;
+        this->ptLow = obj.ptLow;
+        this->ptHigh = obj.ptHigh;
+        this->attribute = obj.attribute;
         return *this;
-    }
-    void operator++() {
-        this->raw = (this->raw + 1) % SCREEN_WIDTH;
-    }
-} Pos;
+    };
+} RenderData;
 
+typedef union {
+     uint16_t raw : 15;
+     struct {
+         uint8_t coarseX : 5;
+         uint8_t coarseY : 5;
+         uint8_t nt : 2;
+         uint8_t fineY : 3;
+         uint8_t unused : 1;
+     };
+} VramAddr;
 
 typedef struct {
     uint8_t yPos;
@@ -111,8 +120,8 @@ private:
     EMirroring mirrorring;
 
     /* internal registers a.k.a loopy */
-    uint16_t loopyV : 15;           /* current VRAM address (15 bits) */
-    uint16_t loopyT : 15;           /* temporary VRAM address (15 bits) */
+    VramAddr loopyV;                /* current VRAM address (15 bits) */
+    VramAddr loopyT;                /* temporary VRAM address (15 bits) */
     uint8_t loopyX : 3;             /* fine X scroll (3 bits) */
     uint8_t loopyW : 1;             /* first or second write toggle (1 bit) */
 
@@ -121,14 +130,9 @@ private:
     bool frameReady;
 
     /* rendering internal */
-    Pos xPos;
     int currentXPos;
-    uint8_t nextPTDataLow;
-    uint8_t nextPTDataHigh;
-    uint8_t nextAttribute;
-    uint8_t currentPTDataLow;
-    uint8_t currentPTDataHigh;
-    uint8_t currentAttribute;
+    RenderData currentRenderData;
+    RenderData nextRenderData;
 
     /* NMI */
     bool oldNMI;
@@ -146,11 +150,13 @@ private:
     void UpdateObjTable();
     void UpdateTileMap();
     uint8_t MemReadNoBuf(uint16_t) const;
-    uint8_t GetAttributeTableEntry(unsigned, int, int) const;
+    uint8_t GetAttributeTableEntry(unsigned, unsigned, unsigned) const;
     void UpdateLoopyV();
-    bool RenderEnable() const;
+    bool IsRenderEnable() const;
     bool DuringRendering() const;
     void DrawBgTile(uint16_t, uint8_t, uint8_t);
+    void IncrementX();
+    void IncrementY();
 
 public:
     /* getter/setter */
@@ -162,7 +168,7 @@ public:
     uint8_t * GetOAM();
     uint32_t *GetOBJFrameBuffer();
     uint32_t *GetTileMapFrameBuffer();
-    void GetTileData(int);
+    void ProcessPixel(int);
 
     void SetFrameNotReady();
     void UpdateTables();
