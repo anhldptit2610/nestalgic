@@ -310,8 +310,10 @@ void PPU::UpdateTables()
 
 void PPU::ProcessPixel(int sL = -1)
 {
-    auto GetPaletteNumber = [this](uint8_t& attribute) -> void {
-        attribute =  (attribute >> (((this->loopyV.coarseY % 4) / 2 * 2 + (this->loopyV.coarseX % 4) / 2) * 2)) & 0x03;
+    auto GetPaletteNumber = [this](uint8_t attribute) -> uint8_t {
+        uint8_t x = this->currentRenderData.x;
+        uint8_t y = this->currentRenderData.y;
+        return (attribute >> (((y % 4) / 2 * 2 + (x % 4) / 2) * 2)) & 0x03;
     };
 
     static unsigned step = 0;
@@ -319,21 +321,26 @@ void PPU::ProcessPixel(int sL = -1)
     static RenderData renderData;
     int scanLine = (sL == -1) ? this->scanLine : sL;
 
+    // TODO: seperate this from above code
+    if (IN_RANGE(tick, 1, 256) && IN_RANGE(this->scanLine, 0, SCREEN_HEIGHT - 1)) {
+            const uint8_t pixel = NTHBIT(currentRenderData.ptLow, 7 - ((tick - 1) % 8)) | (NTHBIT(currentRenderData.ptHigh, 7 - ((tick - 1) % 8)) << 1);
+            const uint16_t paletteEntry = (0x3f00 | pixel | (GetPaletteNumber(currentRenderData.attribute) << 2));
+            screenFrameBuffer[this->scanLine * SCREEN_WIDTH + currentXPos] = PALETTE[ReadPaletteRAM(paletteEntry)];
+            currentXPos = (currentXPos == SCREEN_WIDTH - 1) ? 0 : currentXPos + 1;
+    }
+
     switch ((tick - 1) % 8) {
     case 0:
-        // the shifters are reloaded during ticks 9, 17, 25, ..., 257.
-        currentRenderData = nextRenderData;
-        nextRenderData = renderData;
         break;
     case 1:
         ntEntry = MemReadNoBuf(0x2000 | (loopyV.raw & 0x0fff));
+        renderData.y = (loopyV.raw >> 5) & 0x1f;
+        renderData.x = loopyV.raw & 0x1f;
         break;
     case 2: // fetch attribute table byte
         break;
     case 3:
-        renderData.attribute = MemReadNoBuf(
-            0x23c0 | (loopyV.raw & 0x0c00) | ((loopyV.raw >> 4) & 0x38) | ((loopyV.raw >> 2) & 0x07));
-        GetPaletteNumber(renderData.attribute);
+        renderData.attribute = GetAttributeTableEntry((loopyV.raw >> 10) & 0x03, loopyV.raw & 0x1f, (loopyV.raw >> 5) & 0x1f);
         break;
     case 4: // get pattern table tile low
         break;
@@ -347,17 +354,11 @@ void PPU::ProcessPixel(int sL = -1)
         // update coarse X
         if (IsRenderEnable())
             IncrementX();
+        currentRenderData = nextRenderData;
+        nextRenderData = renderData;
         break;
     default:
         break;
-    }
-
-    // TODO: seperate this from above code
-    if (IN_RANGE(tick, 1, 256) && IN_RANGE(this->scanLine, 0, SCREEN_HEIGHT - 1)) {
-            const uint8_t pixel = NTHBIT(currentRenderData.ptLow, 7 - step) | (NTHBIT(currentRenderData.ptHigh, 7 - step) << 1);
-            const uint16_t paletteEntry = (0x3f00 | pixel | (currentRenderData.attribute << 2));
-            screenFrameBuffer[this->scanLine * SCREEN_WIDTH + currentXPos] = PALETTE[ReadPaletteRAM(paletteEntry)];
-            currentXPos = (currentXPos == SCREEN_WIDTH - 1) ? 0 : currentXPos + 1;
     }
 
     step = (step + 1) % 8;
@@ -421,9 +422,9 @@ void PPU::Step(int cpuCycle)
                 }
             } else if (IN_RANGE(tick, 257, 320)) {
                 if (IsRenderEnable() && tick == 257) {
-                    loopyV.raw = (loopyV.raw & ~0x841f) | (loopyT.raw & 0x041f);
+                    loopyV.raw = (loopyV.raw & 0x7be0) | (loopyT.raw & 0x041f);
                 } else if (IsRenderEnable() && IN_RANGE(tick, 280, 304) && scanLine == PRE_RENDER_SCANLINE) {
-                    loopyV.raw = (loopyV.raw & ~0xfbe0) | (loopyT.raw & 0x7be0);
+                    loopyV.raw = (loopyV.raw & 0x041f) | (loopyT.raw & 0x7be0);
                 }
             } else if (IN_RANGE(tick, 321, 336)) {
                 ProcessPixel((scanLine == PRE_RENDER_SCANLINE) ? 0 : scanLine + 1);

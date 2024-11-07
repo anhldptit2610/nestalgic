@@ -25,6 +25,8 @@ typedef enum {
 
 typedef struct RenderData {
     uint8_t ptLow;
+    uint8_t x;
+    uint8_t y;
     uint8_t ptHigh;
     uint8_t attribute;
     RenderData& operator=(const RenderData& obj) {
@@ -33,6 +35,8 @@ typedef struct RenderData {
         this->ptLow = obj.ptLow;
         this->ptHigh = obj.ptHigh;
         this->attribute = obj.attribute;
+        this->x = obj.x;
+        this->y = obj.y;
         return *this;
     };
 } RenderData;
