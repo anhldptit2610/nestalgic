@@ -41,15 +41,21 @@ typedef struct RenderData {
     };
 } RenderData;
 
-typedef union {
-     uint16_t raw : 15;
-     struct {
-         uint8_t coarseX : 5;
-         uint8_t coarseY : 5;
-         uint8_t nt : 2;
-         uint8_t fineY : 3;
-         uint8_t unused : 1;
-     };
+typedef struct VramAddr {
+    uint16_t raw : 15;
+
+    uint8_t CoarseX() const { return raw & 0x1f; }
+    uint8_t CoarseY() const { return (raw >> 5) & 0x1f; }
+    uint8_t NT() const { return (raw >> 10) & 0x03; }
+    uint8_t FineY() const { return (raw >> 12) & 0x07; }
+
+    VramAddr& operator+=(const uint16_t val) { raw += val; return *this; }
+    VramAddr& operator&=(const uint16_t val) { raw &= val; return *this; }
+    VramAddr& operator^=(const uint16_t val) { raw ^= val; return *this; }
+    VramAddr& operator=(const uint16_t val) { raw = val; return *this; }
+    uint16_t operator+(const uint16_t val) const { return raw + val; }
+    uint16_t operator&(const uint16_t val) const { return raw & val; }
+    uint16_t operator^(const uint16_t val) const { return raw ^ val; }
 } VramAddr;
 
 typedef struct {

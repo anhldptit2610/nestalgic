@@ -319,7 +319,6 @@ void PPU::ProcessPixel(int sL = -1)
     static unsigned step = 0;
     static uint8_t ntEntry;
     static RenderData renderData;
-    int scanLine = (sL == -1) ? this->scanLine : sL;
 
     // TODO: seperate this from above code
     if (IN_RANGE(tick, 1, 256) && IN_RANGE(this->scanLine, 0, SCREEN_HEIGHT - 1)) {
@@ -333,24 +332,24 @@ void PPU::ProcessPixel(int sL = -1)
     case 0:
         break;
     case 1:
-        ntEntry = MemReadNoBuf(0x2000 | (loopyV.raw & 0x0fff));
-        renderData.y = (loopyV.raw >> 5) & 0x1f;
-        renderData.x = loopyV.raw & 0x1f;
+        ntEntry = MemReadNoBuf(0x2000 | (loopyV & 0x0fff));
+        renderData.y = loopyV.CoarseY();
+        renderData.x = loopyV.CoarseX();
         break;
     case 2: // fetch attribute table byte
         break;
     case 3:
-        renderData.attribute = GetAttributeTableEntry((loopyV.raw >> 10) & 0x03, loopyV.raw & 0x1f, (loopyV.raw >> 5) & 0x1f);
+        renderData.attribute = GetAttributeTableEntry(loopyV.NT(), loopyV.CoarseX(), loopyV.CoarseY());
         break;
     case 4: // get pattern table tile low
         break;
     case 5:
-        renderData.ptLow = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + (scanLine % 8));
+        renderData.ptLow = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + loopyV.FineY());
         break;
     case 6: // get pattern table tile high
         break;
     case 7:
-        renderData.ptHigh = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + (scanLine % 8) + 8);
+        renderData.ptHigh = MemReadNoBuf(0x1000 * PPUCTRL.bgPTAddr + (ntEntry * 16) + loopyV.FineY() + 8);
         // update coarse X
         if (IsRenderEnable())
             IncrementX();
@@ -372,30 +371,30 @@ void PPU::UpdateLoopyV()
 
 void PPU::IncrementX()
 {
-    if ((loopyV.raw & 0x001f) == 31) {
-        loopyV.raw &= ~0x001f;
-        loopyV.raw ^= 0x0400;
+    if ((loopyV & 0x001f) == 31) {
+        loopyV &= ~0x001f;
+        loopyV ^= 0x0400;
     } else {
-        loopyV.raw += 1;
+        loopyV += 1;
     }
 }
 
 void PPU::IncrementY()
 {
-    if ((loopyV.raw & 0x7000) != 0x7000) {
-        loopyV.raw += 0x1000;
+    if ((loopyV & 0x7000) != 0x7000) {
+        loopyV += 0x1000;
     } else {
-        loopyV.raw &= ~0x7000;
-        int y = (loopyV.raw & 0x03e0) >> 5;
+        loopyV &= ~0x7000;
+        int y = (loopyV & 0x03e0) >> 5;
         if (y == 29) {
             y = 0;
-            loopyV.raw ^= 0x0800;
+            loopyV ^= 0x0800;
         } else if (y == 31) {
             y = 0;
         } else {
             y++;
         }
-        loopyV.raw = (loopyV.raw & ~0x03e0) | (y << 5);
+        loopyV = (loopyV & ~0x03e0) | (y << 5);
     }
 }
 
@@ -416,15 +415,17 @@ void PPU::Step(int cpuCycle)
             if (tick == 0) {
 
             } else if (IN_RANGE(tick, 1, 256)) {
+                if (this->scanLine == PRE_RENDER_SCANLINE && tick == 1)
+                    PPUSTATUS.vblankStarted = false;
                 ProcessPixel();
                 if (tick == 256 && IsRenderEnable()) {
                     IncrementY();
                 }
             } else if (IN_RANGE(tick, 257, 320)) {
                 if (IsRenderEnable() && tick == 257) {
-                    loopyV.raw = (loopyV.raw & 0x7be0) | (loopyT.raw & 0x041f);
+                    loopyV = (loopyV & 0x7be0) | (loopyT & 0x041f);
                 } else if (IsRenderEnable() && IN_RANGE(tick, 280, 304) && scanLine == PRE_RENDER_SCANLINE) {
-                    loopyV.raw = (loopyV.raw & 0x041f) | (loopyT.raw & 0x7be0);
+                    loopyV = (loopyV & 0x041f) | (loopyT & 0x7be0);
                 }
             } else if (IN_RANGE(tick, 321, 336)) {
                 ProcessPixel((scanLine == PRE_RENDER_SCANLINE) ? 0 : scanLine + 1);
@@ -434,26 +435,21 @@ void PPU::Step(int cpuCycle)
         } else if (this->scanLine == 240) {     // idle this scanline
 
         } else if (this->scanLine > 240) {
-
+            if (this->scanLine == 241 && tick == 1)
+                PPUSTATUS.vblankStarted = true;
         }
 
         if (tick == 340) {
             tick = 0;
             currentXPos = 0;
-            if (scanLine == SCREEN_HEIGHT - 1) {
-                frameReady = true;
-            } else if (scanLine == SCREEN_HEIGHT) {
-                PPUSTATUS.vblankStarted = true;         // TODO: correct vblank start and end timing
-            } else if (scanLine == PRE_RENDER_SCANLINE) {
-                PPUSTATUS.vblankStarted = false;
-            }
+            frameReady = (scanLine == SCREEN_HEIGHT - 1) ? true : false;
             scanLine = (scanLine == PRE_RENDER_SCANLINE) ? 0 : scanLine + 1;
         } else {
             tick++;
         }
     }
     oldNMI = NMI;
-    NMI = (PPUSTATUS.vblankStarted && PPUCTRL.vblankNMIEnable) ? false : true;
+    NMI = !(PPUSTATUS.vblankStarted && PPUCTRL.vblankNMIEnable);
 }
 
 void PPU::Init(ROM *ROM, int _mirroring)
@@ -466,8 +462,7 @@ void PPU::Init(ROM *ROM, int _mirroring)
 #endif
     /* loopy registers init */
     loopyW = loopyX = 0;
-    loopyT.raw = 0;
-    loopyV.raw = 0;
+    loopyT = loopyV = 0;
 
     scanLine = 0;
     genLatch = 0;
