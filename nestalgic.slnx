@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="nestalgic.vcxproj" Id="cafa9ca8-9d31-4332-8158-25e156eb58ec" />
+</Solution>

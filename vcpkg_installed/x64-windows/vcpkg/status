@@ -1,0 +1,85 @@
+Package: vcpkg-cmake-config
+Version: 2026-07-21
+Architecture: x64-windows
+Multi-Arch: same
+Abi: b0b5f419e1b6d4ef6060267c9beb26078883ea83be1f1372125387c62b453a46
+Status: install ok installed
+
+Package: vcpkg-cmake
+Version: 2024-04-23
+Architecture: x64-windows
+Multi-Arch: same
+Abi: c93f3ece864f4a981ca5f2cdd3fa234db1e14974abfb27b1871ea49abd429721
+Status: install ok installed
+
+Package: sdl3
+Version: 3.4.12
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 90eb4cf233a65fe6b490ec37d0851b10088c3566095861cb98ae6ee3fb603dbe
+Description: Simple DirectMedia Layer is a cross-platform development library designed to provide low level access to audio, keyboard, mouse, joystick, and graphics hardware via OpenGL and Direct3D.
+Status: install ok installed
+
+Package: imgui
+Version: 1.92.8
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 7f0358e496d74d088790b070c9e3a0716461fac1ba88039d69d396954e32d9b8
+Description: Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies.
+Status: install ok installed
+
+Package: imgui
+Feature: sdl3-binding
+Depends: sdl3
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available SDL3 binding
+Status: install ok installed
+
+Package: imgui
+Feature: sdl3-renderer-binding
+Depends: sdl3
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available SDL3 Renderer binding
+Status: install ok installed
+
+Package: fmt
+Version: 12.2.0
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: a8aba648f1b2adadba3a077b78c6107fab4b0d49a5cbe043bf4688f0855287fb
+Description: {fmt} is an open-source formatting library providing a fast and safe alternative to C stdio and C++ iostreams.
+Status: install ok installed
+
+Package: spdlog
+Version: 1.17.0
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 2d09524d89f318dca090d5d7f6a8509c1e42c9b963ffbd820141168bf6adc437
+Description: Very fast, header-only/compiled, C++ logging library.
+Default-Features: fmt, tz-offset
+Status: install ok installed
+
+Package: spdlog
+Feature: fmt
+Depends: fmt
+Architecture: x64-windows
+Multi-Arch: same
+Description: Use fmt library
+Status: install ok installed
+
+Package: spdlog
+Feature: tz-offset
+Architecture: x64-windows
+Multi-Arch: same
+Description: Omit %z timezone offset (use on platforms without tm_gmtoff)
+Status: install ok installed
+

@@ -1,0 +1,4 @@
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/lib/imguid.lib
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/share/imgui/imgui-config.cmake
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/share/imgui/imgui-targets.cmake
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/pkgs/imgui_x64-windows/debug/share/imgui/imgui-targets-debug.cmake

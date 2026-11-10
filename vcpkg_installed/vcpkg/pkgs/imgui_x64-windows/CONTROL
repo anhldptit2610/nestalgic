@@ -1,0 +1,22 @@
+Package: imgui
+Version: 1.92.8
+Port-Version: 1
+Depends: vcpkg-cmake, vcpkg-cmake-config
+Architecture: x64-windows
+Multi-Arch: same
+Abi: 7f0358e496d74d088790b070c9e3a0716461fac1ba88039d69d396954e32d9b8
+Description: Bloat-free Immediate Mode Graphical User interface for C++ with minimal dependencies.
+
+Package: imgui
+Feature: sdl3-binding
+Depends: sdl3
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available SDL3 binding
+
+Package: imgui
+Feature: sdl3-renderer-binding
+Depends: sdl3
+Architecture: x64-windows
+Multi-Arch: same
+Description: Make available SDL3 Renderer binding

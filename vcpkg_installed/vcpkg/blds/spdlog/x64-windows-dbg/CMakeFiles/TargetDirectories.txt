@@ -1,0 +1,8 @@
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/spdlog.dir
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/package.dir
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/package_source.dir
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/edit_cache.dir
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/rebuild_cache.dir
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/list_install_components.dir
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/install.dir
+D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/CMakeFiles/install/local.dir

@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/VS_repos/nestalgic/vcpkg_installed/vcpkg/blds/spdlog/x64-windows-dbg/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
